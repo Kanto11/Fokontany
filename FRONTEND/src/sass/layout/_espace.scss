@@ -1,0 +1,82 @@
+@use '../abstract' as * ;
+.responsable{
+    max-width : 100vw;
+    max-height: 100vh;
+    @include dflex();
+    
+}
+.resp__left{
+    background-color: $color-blanc;
+    h5{
+        margin-left: 1rem;
+        font-family: $font-link;
+        color: $color-bleu;
+    }
+}
+.logos__resp{
+    margin: 1rem;
+}
+.barre_resp{
+    margin: 1rem 0;
+    width: 80%;
+    background-color: $color-jaune;
+    height: 2px;
+}
+
+.resp-nav{
+    color: $color-gris;
+    font-family: $font-link;
+    padding: 1rem;
+    @include dflex();
+    gap: 0.7rem;
+    img{
+        width: 1.7rem;
+        height: auto;
+    }
+    &.active { 
+        background: $bg-gris-section; 
+        font-family: $font-logos;
+        }
+    &:hover{
+        font-family: $font-logos;
+    }
+}
+
+.resp__left__footer{
+    position: absolute;
+    bottom: 0;
+    margin: 1rem ;
+    font-size: small;
+    color:$color-gris
+}
+
+
+//right
+.resp__right{
+    background-color: $bg-gris-section;
+    width: 100%;
+    height: 100vh;
+    overflow: hidden;
+}
+.resp__right_header{
+    @include dflex();
+    align-items: center;
+    justify-content: space-between;
+    width: 100%;
+    height: 3.9rem;
+    background-color:$color-blanc;
+    padding: 1rem;
+}
+.right__header__connexion{
+    gap: 1rem;
+    display: flex;
+    justify-content: flex-end;
+}
+.deconnexion_resp{
+    background-color: $color-jaune;
+}
+
+.resp__right__body{
+    width: 100%;
+    
+}

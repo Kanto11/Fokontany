@@ -1,0 +1,20 @@
+$color-blanc :#FFFFFF;
+$color-gris:#495057;
+$color-bleu : rgb(15, 16, 84);
+$color-jaune :rgb(255, 234, 0);
+$color-noir:#121214;
+
+$bg-gris :#F8F9Fa;
+$bg-gris-section:#F1F3F5;
+
+$font-logos:'outfit_bl';
+$font-hero-title:$font-logos;
+$font-stat-val :$font-logos;
+$font-hero-p:'manrope_md';
+$font-stat-info:$font-hero-p;
+
+
+$breakpoints:(
+    "sm": 480px,
+    "md": 768px,
+)

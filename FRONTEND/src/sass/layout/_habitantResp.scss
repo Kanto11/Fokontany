@@ -1,0 +1,65 @@
+@use '../abstract' as * ;
+.habitant_resp{
+    padding: 1rem;
+}
+.btn_ajouter_habitant{
+    display: flex;
+    justify-content: flex-end;
+    button{
+        display: flex;
+        align-items: center;
+        color: $border-color;
+        background-color: $color-bleu;
+        gap: 0.6rem;
+        img{
+            width: 1rem;
+        }
+    }
+}
+
+.habitant__resp__search{
+    margin: auto;
+    justify-content: center;
+    border-radius: 16px;
+    padding: 1rem;
+    width: 40%;
+    background-color:$color-blanc;
+}
+.search_text{
+    @include dflex();
+    img{
+        width:1rem;
+    }
+}
+.habitant__resp__search__filtre{
+
+    @include dflex();
+    justify-content: space-between;
+    margin-top: 1rem;
+    gap: 1rem;
+}
+.habitant__filtre__select{
+    width: 100%;
+}
+
+//tableau
+.habitant__resp__body{
+    margin-top: 3rem;
+    background-color: $color-blanc;
+    border-radius: 1rem;
+}
+
+
+//formulaire
+
+.carnetDialog{
+    input{
+        margin-bottom: 1rem;
+    }
+}
+.logement__ajout{
+  select{
+    margin: 1rem 0;
+  }
+    
+}

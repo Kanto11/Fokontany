@@ -1,0 +1,85 @@
+@use '../abstract' as * ;
+.pub__resp{
+    height: 100vh;
+    overflow: hidden;
+}
+.pub__resp__body{
+    padding: 2rem;
+    height: calc(100vh - 4rem);
+    @include dflex();
+    overflow: hidden;
+    gap: 2rem;
+   
+}
+.pub__resp__body__left{
+    width: 70%;
+    height: 100%;
+    overflow: hidden;
+    background-color: $color-blanc;
+    border-radius: 1rem;
+    padding: 1rem;
+}
+.pub__left__container{
+    height: calc(100% - 120px);
+    overflow-y:auto;
+    
+    p{
+        padding-top: 1rem;
+    }
+
+}
+
+.card__pub__resp__header{
+    color: $color_bleu;
+}
+.resp__search{
+    margin-top: 1rem;
+}
+.resp__search__date{
+    @include dflex();
+    gap: 1rem;
+}
+.card__pub{
+    padding-top: 2rem;
+    border:1px solid $border-color;
+    border-radius: 1rem;
+    padding: 1rem;
+    margin-top: 1rem;
+
+    button{
+        margin-top: 1rem;
+        display: flex;
+        align-items: center;
+        color: $border-color;
+        background-color: $color-bleu;
+        gap: 0.6rem;
+        img{
+            width: 1rem;
+        }
+    }
+}
+.card__pub__btn{
+    display: flex;
+    justify-content: flex-end;
+}
+
+.pub__resp__body__right{
+    background-color: $color-blanc;
+    border-radius: 1rem;
+    width: 30%;
+    padding: 1rem;
+    label{
+        margin-top: 1rem;
+    }
+    textarea{
+        margin-top: 1rem;
+         height: calc(80vh - 8rem);
+    }
+}
+.pub__form__action{
+    margin-top: 1rem;
+    display: flex;
+    justify-content: flex-end;
+    gap: 1rem;
+}
+

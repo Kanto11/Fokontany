@@ -1,0 +1,28 @@
+$bg-gris :#F8F9Fa;
+$bg-gris-section:#F1F3F5;
+
+$font-logos:'outfit_bl';
+$font-link : 'manrope_sb';
+$font-hero-title:$font-logos;
+$font-stat-val :$font-logos;
+$font-hero-p:'manrope_md';
+$font-stat-info:$font-hero-p;
+
+
+$breakpoints:(
+    "sm": 480px,
+    "md": 768px,
+);
+
+$primary-color: #3b82f6;      
+$border-color: #cbd5e1;        
+$text-color: #1e293b;          
+$placeholder-color: #94a3b8;  
+$background-color: #ffffff;
+$transition-speed: 0.2s;
+
+$color-blanc :$background-color;
+$color-gris:$text-color;
+$color-bleu : rgb(15, 16, 84);
+$color-jaune :rgb(255, 234, 0);
+$color-noir:#121214;

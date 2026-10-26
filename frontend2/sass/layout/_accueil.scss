@@ -1,0 +1,252 @@
+@use '../abstract' as * ;
+
+//_______________________HEADER______________________
+.header{
+    position: fixed;
+    width: 100%;
+    z-index: 1000;
+    background-color:$color-blanc;
+    box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+}
+.header__container{
+    height: 3.75rem;
+    width: 100%;
+    @include dflex();
+    justify-content: space-between;
+    align-items: center;
+}
+.header__gauche{
+   display: flex;
+   gap: 0.5rem;
+}
+.burger__menu{
+    background-color: $bg-gris;
+    align-items: center;
+    display: flex;
+    img{
+        width: 1.50rem;
+        height: 1.50rem;
+    }
+}
+.header__link{
+    display: none;
+    position: absolute;
+    top: 3.75rem;
+    left: 0;
+    background-color: $bg-gris;
+    width: 100%;
+    
+    ul{
+        color: $color-bleu;
+        li{
+            a{
+                padding-left: 3rem;
+            }
+            &:hover{
+                font-weight: bold;
+                background-color: $color-blanc;
+            }
+        }
+    }
+}
+.sign__up{
+    background-color: $color-jaune ;
+    color:  $color-bleu;
+}
+
+//------------------------HERO----------------------------
+.hero{
+    position: relative;
+    padding-top: 3.75rem;
+}
+.hero__text{
+    position: absolute;
+    top: 50%;
+    left: 5%;
+    color: $color-blanc;
+    line-height: normal;
+    p{
+        color: $color-blanc;
+    }
+    button{
+        margin-top: 1rem;
+        background-color: rgb(15, 16, 84 );
+        color: $color-blanc ;
+        border-radius: 0;
+        display: flex;
+        align-items: center;
+        img{
+            padding-left: 0.5rem;
+        }
+    }
+}
+.hero__titre{
+    width: 10rem;
+    font-family: $font-hero-title;
+    font-size: 1.25rem;
+    span{
+        font-size: 0.8rem;
+        font-family: $font-hero-p;
+    }
+}
+
+//________________________APROPOS___________________________
+.apropos{
+    width: 100%;
+    background-color: $bg-gris-section;
+}
+.gril__stat{
+    @include dflex();
+    gap: 2rem;
+    padding: 1rem 0;
+    p{
+        padding-bottom: 0rem;
+    }
+}
+.stat__card{
+    @include center();
+    padding: 1rem;
+}
+.stat__valeur{
+    font-size:1.1rem ;
+    font-family: $font-stat-val;
+    padding-bottom: 0.3rem;
+    color: $color-bleu;
+}
+.stat__info{
+    font-size: 0.6rem;
+    font-family:$font-stat-info;
+    color: $color-gris;
+}
+//_______________________HISTOIRE_________________________
+.agent__resp{
+    border: 1px solid $color-jaune;
+    padding-bottom: 1rem;
+}
+.agent__info{
+    padding-left: 1rem;
+}
+
+//_______________________RESPONSABLE______________________
+.responsable{
+    background-color: $bg-gris-section;
+}
+.responsable__card{
+    display: flex;
+    gap: 0.5rem;
+}
+.agent__img{
+    img{
+        border-radius: 1rem 1rem 0 0 ;
+    }
+}
+
+//_______________________RESPONSIVE_______________________
+
+@include respond("md"){
+    .header__container{
+        height: 5.6rem;
+    }
+    .burger__menu{
+        display: none;
+    }
+    .header__link{
+        display: block;
+        position: static;
+        width: auto;
+        background-color: transparent;
+        ul{
+            display: flex;
+            gap : 3rem;
+            
+            li{
+                a{
+                    padding: 0;
+                }
+                &.active{
+                    font-weight: bold;
+                    border-bottom: solid 2px $color-jaune; 
+                }
+            }
+        }
+    }
+    //___________________HERO_____________________________
+    .hero__text{
+        left: 10%;
+        button{
+            font-size: 1rem;
+            height: 45px;
+            padding:0.87rem 1.75rem ;
+        }
+    }
+    .hero__img{
+        max-height: 100vh;
+       img{
+        width: 100%;
+        height: auto;
+       }
+    }
+    .hero__titre{
+        width: 30rem;
+        font-size: 3.5rem;
+        span{
+                font-size: 1rem;
+        }
+    }
+    //_________________A propos___________________________ 
+    .apropos__texte{
+        width: 70%;
+        display: flex;
+        margin: auto;
+        flex-direction: column;
+        text-align: center;
+        p{
+            padding: 2rem 0;
+        }
+    }
+    .apropos__stat{
+        @include dflex();
+        gap: 2rem;
+
+    }
+    .gril__stat{
+        width: 100%;
+        justify-content: space-around;
+    }
+    .stat__card{
+        @include center();
+        // align-items: flex-start;
+        flex-direction: column;
+        padding: 1.5rem;
+        width:100%;
+    }
+    .stat__valeur{
+        font-size:1.5rem ;
+    }
+    .stat__info{
+        font-size: 0.8rem;
+    }
+
+    //___________________HISTOIRE________________________
+    .histoire__container{
+        @include dflex();
+        gap: 3rem;
+    }
+    .histoire__img{
+        width: 40%;
+    }
+    .histoire__texte{
+        width: 60%;
+        h2{
+        margin: 0;
+        text-align: left;
+        }
+    }
+    //___________________RRESPONSABLE_____________________
+    .responsable__card{
+        padding-top: 2rem;
+        gap:2rem;
+    }
+    
+}
+

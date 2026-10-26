@@ -1,0 +1,42 @@
+@use '../abstract' as * ;
+button{
+    height: 2rem;
+    padding:  0px 0.7rem;
+    justify-content: center;
+    border-radius: 1rem;
+    font-size: 0.8rem;
+    &:hover{
+        font-weight: bold;
+    }
+    img{
+        width: 1rem;
+    }
+}
+
+.sign_up{
+    padding: 0.6rem;
+    border-radius: 1rem;
+    background-color: $color-jaune ;
+    color:  $color-bleu;
+}
+.btn__annuler{
+    background-color:$border-color;
+    color: $color-gris;
+}
+.btn__valider{
+    background-color: $color-bleu;
+    color: $color-blanc;
+}
+.btn__ajouter{
+    @include center();
+    background-color: $color-bleu;
+    color: $color-blanc;
+    gap: 0.6rem;;
+}
+
+.btn__action{
+    @include dflex();
+    justify-content: flex-end;
+    padding-top: 1rem;
+    gap:1rem;
+}

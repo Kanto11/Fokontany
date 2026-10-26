@@ -1,0 +1,46 @@
+@use '../abstract' as * ;
+.logos{
+    font-family: $font-logos;
+    color :$color-bleu;
+}
+.fkt{
+    font-size: 1.2rem;
+}
+.logos__lieu{
+    font-size: 0.8rem;
+}
+section{
+    padding: 2rem 0;
+}
+.section__title{
+    color: $color-bleu;
+}
+
+.card{
+    width: 100%;
+    background-color: $color-blanc;
+    border-radius: 1rem;
+    
+    flex-direction: column;
+    gap: 0.5rem;
+}
+
+//_______________RESPONSIVE_______________
+@include respond("md"){
+    .fkt{
+        font-size: 1.5rem;
+    }
+    .logos__lieu{
+        font-size: 1rem;
+    }
+    section{
+        padding: 6.25rem 0;
+    }   
+    .section__title{
+        font-size: 2rem;
+        width: 70%;
+        @include dflex();
+        flex-direction: column;
+        text-align: center;
+    }
+}
