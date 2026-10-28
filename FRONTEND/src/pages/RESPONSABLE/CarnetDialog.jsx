@@ -2,6 +2,8 @@ import { useEffect, useRef, useState } from "react";
 import api from "../../api";
 import ajouter from "../../assets/Icons/plus.png";
 
+const parentvide ={
+  nom_P : "" , prenom_P : "" ,date_nais_P : "" ,lieu_nais_P :"", nom_pere_P : "", nom_mere_P: "" , prof_P :"" ,tel_P : "",nationalite_P :"", proprietaire_P : false , email : "" , mot_de_passe :"" ,email_verif : "" , Cin_P : " ",date_delivrence_P : "" ,lieu_delivrence_P : "" , Passport :"" , date_expiration :""}
 export default function CarnetDialog({}) {
   const dialogRef = useRef(null);     
   const ouvrir = () => dialogRef.current.showModal();
@@ -49,6 +51,8 @@ export default function CarnetDialog({}) {
   const [adresseH, setAdresseH] = useState("");
   const [logementId , setLogementId] = useState("");
   const [erreurLog ,setErreurLog] = useState("");
+  const [pere , setPere] = useState(parentvide);
+  const [mere , setMere] = useState(parentvide);
   
   function changerAdresse(e){
     const valeur = e.target.value;
@@ -69,7 +73,7 @@ export default function CarnetDialog({}) {
   // autre champ
   const [professions ,  setProfessions] = useState([]);
   const [nationalites  , setNationalites] = useState([]);
-  
+
  
 
   useEffect(()=>{
@@ -151,10 +155,14 @@ export default function CarnetDialog({}) {
             </button>
           </div>
           <div className="parent__ajout">
-              <ParentFields titre="Père" professions= {professions} nationalites={nationalites}/>
+              <ParentFields titre="Père" professions= {professions} nationalites={nationalites} valeur={pere}/>
+              <ParentFields titre="Mère" professions= {professions} nationalites={nationalites} valeur={mere}/>
           </div>
 
-          
+          <div className="btn__carnetDialog btn__action">
+              <button className="btn__valider">Valider</button>
+              <button  className="btn__annuler">Annuler</button>
+          </div>
         </form>
       </dialog>
 
@@ -198,57 +206,103 @@ export default function CarnetDialog({}) {
 }
 
 //----pere et mere----
+function ParentFields({ titre, professions = [], nationalites = [], valeur, onChange }) {
 
-function ParentFields({titre , professions=[] , nationalites=[]}){
-    return(
-      <fieldset>
-        <legend>{titre}</legend>
-        <input type="text" placeholder="Nom" />
-        <input type="text" placeholder="Prenom" />
-        <input type="date"  />
-        <input type="text" placeholder="Lieu de naissance"  />
-        <input type="text"  placeholder="Nom du père"/>
-        <input type="text" placeholder="Nom de la mère" />
-        <input type="text" placeholder="Téléphone de 10 chiffres"/>
-        <div className="parent__nationalites">
-          <label htmlFor="">Nationalites :</label>
-          <select >
-            <option value="">--Choisir--</option>
-            {nationalites.map((n) => 
-            <option key={n.id} value={n.id}>{n.nationalite ?? p.id}</option>)}
-          </select>
-        </div>
-        <div className="parent__identite__CIN">
-          <label htmlFor=""> N Cin:</label>
-          <input type="text" />
+  if (!valeur) return null; 
 
-          <label htmlFor="">Date de delivrence :</label>
-          <input type="date"/>
+  const set = (champ, v) => onChange({ ...valeur, [champ]: v });
 
-          <label htmlFor="">Lieu de delivrence :</label>
-          <input type="text"/>
+  return (
+    <fieldset>
+      <legend>{titre}</legend>
+      <label htmlFor="">Nom :</label>
+      <input type="text" value={valeur.nom_P || ""} onChange={(e) => set("nom_P", e.target.value)} />
 
-        </div>
-        <div className="parent__identite__Passport">
+      <label htmlFor="">Prénom :</label>
+      <input type="text" value={valeur.prenom_P || ""} onChange={(e) => set("prenom_P", e.target.value)} />
+
+      <label htmlFor="">Date de naissance :</label>
+      <input type="date" value={valeur.date_nais_P || ""} onChange={(e) => set("date_nais_P", e.target.value)} />
+
+      <label htmlFor="">Lieu de naissance :</label>
+      <input type="text" value={valeur.lieu_nais_P || ""} onChange={(e) => set("lieu_nais_P", e.target.value)} />
+
+      <label>Nom du père :</label>
+      <input type="text" value={valeur.nom_pere_P || ""} onChange={(e) => set("nom_pere_P", e.target.value)} />
+
+      <label htmlFor="">Nom de la mère</label>
+      <input type="text" value={valeur.nom_mere_P || ""} onChange={(e) => set("nom_mere_P", e.target.value)} />
+
+      <label htmlFor="">Téléphone : (10 Chiffres)</label>
+      <input type="text" placeholder="Téléphone de 10 chiffres" value={valeur.tel_P || ""} onChange={(e) => set("tel_P", e.target.value)} />
+
+      <div className="parent__nationalites">
+        <label htmlFor="">Nationalités :</label>
+        <select value={valeur.nationalite_P || ""} onChange={(e) => set("nationalite_P", e.target.value)}>
+          <option value="">--Choisir--</option>
+          {nationalites.map((n) => (
+            <option key={n.id} value={n.id}>{n.nationalite ?? n.id}</option>
+          ))}
+        </select>
+      </div>
+
+      <div className="origine__parent">
+        
+        {valeur.nationalite_P == "2" && (
+          <div className="parent__identite__CIN">
+            <label htmlFor=""> N Cin:</label>
+            <input type="text" value={valeur.cin_P || ""} onChange={(e) => set("cin_P", e.target.value)} />
+
+            <label htmlFor="">Date de délivrance :</label>
+            <input type="date" value={valeur.date_cin_P || ""} onChange={(e) => set("date_cin_P", e.target.value)} />
+
+            <label htmlFor="">Lieu de délivrance :</label>
+            <input type="text" value={valeur.lieu_cin_P || ""} onChange={(e) => set("lieu_cin_P", e.target.value)} />
+          </div>
+        )}
+
+   
+        {valeur.nationalite_P == "1" && (
+          <div className="parent__identite__Passport">
             <label htmlFor="">N Passport :</label>
-            <input type="text"/>
+            <input type="text" value={valeur.passport_P || ""} onChange={(e) => set("passport_P", e.target.value)} />
 
             <label htmlFor="">Date d'expiration</label>
-            <input type="date" />
-        </div>
-        <div className="parent_proprietaire">
-            <label htmlFor="">Proprietaire:</label>
-            <input type="checkbox" />
-        </div>
-        <div className="parent__profession">
-          <label htmlFor="">Profession :</label>
-          <select >
-            <option value="">--Choisir--</option>
-            {professions.map((p) => 
-            <option key={p.id} value={p.id}>{p.nom_Prof ?? p.id}</option>)}
-          </select>
-        </div>
-        
-      </fieldset>
-    )
+            <input type="date" value={valeur.exp_passport_P || ""} onChange={(e) => set("exp_passport_P", e.target.value)} />
+          </div>
+        )}
+      </div>
+     
+      <div className="parent_proprietaire">
+        <label htmlFor="">Propriétaire :</label>
+        <input 
+          type="checkbox" 
+          checked={!!valeur.est_proprietaire} 
+          onChange={(e) => set("est_proprietaire", e.target.checked)} 
+        />
+      </div>
+
+      <div className="parent__profession">
+        <label htmlFor="">Profession :</label>
+
+        <select value={valeur.profession_id || ""} onChange={(e) => set("profession_id", e.target.value)}>
+          <option value="">--Choisir--</option>
+          {professions.map((p) => (
+            <option key={p.id} value={p.id}>{p.nom_Prof ?? p.id}</option>
+          ))}
+        </select>
+      </div>
+
+      <div className="parent__compte">
+        <label htmlFor="">Email :</label>
+        <input type="text" value={valeur.email_P || ""} onChange={(e) => set("email_P", e.target.value)} />
+
+        <label htmlFor="">Mot de passe</label>
+        <input type="password" value={valeur.password_P || ""} onChange={(e) => set("password_P", e.target.value)} />
+
+        <label htmlFor="">Confirmation mot de passe</label>
+        <input type="password" value={valeur.password_conf_P || ""} onChange={(e) => set("password_conf_P", e.target.value)} />
+      </div>
+    </fieldset>
+  );
 }
