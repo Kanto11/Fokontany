@@ -1,7 +1,7 @@
 import io
 import uuid
 from datetime import date, timedelta
- 
+from django.conf import settings
 import qrcode
 from django.contrib.auth.models import (
     AbstractBaseUser, BaseUserManager, PermissionsMixin,
@@ -140,7 +140,7 @@ class Carnet(models.Model):
         super().save(*args, **kwargs)
         if not self.qr_code:
             
-            img = qrcode.make(f"http://127.0.0.1:8000/verif/{self.token}")
+            img = qrcode.make(f"{settings.SITE_URL}/verif/{self.token}")
             buf = io.BytesIO()
             img.save(buf, format="PNG")
             self.qr_code.save(f"carnet_{self.pk}.png", ContentFile(buf.getvalue()), save=False)
@@ -312,7 +312,7 @@ class Residence(models.Model):
         self.valable_jusqu_au = date.today() + timedelta(days=90)   # environ 3 mois
         
         self.token = uuid.uuid4()
-        img = qrcode.make(f"https://TON-DOMAINE/verif/residence/{self.token}")
+        img = qrcode.make(f"{settings.SITE_URL}verif/residence/{self.token}")
         buf = io.BytesIO()
         img.save(buf, format="PNG")
         self.qr_code.save(f"residence_{self.pk}.png", ContentFile(buf.getvalue()), save=False)

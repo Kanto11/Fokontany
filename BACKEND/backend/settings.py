@@ -150,7 +150,7 @@ MAILERS = {
 
 
 AUTH_USER_MODEL = "fokontany.User"
-SITE_URL = "http://127.0.0.1:8000" #misolo rehefa en ligne 
+SITE_URL = os.environ.get("SITE_URL", "http://localhost:5173") #misolo rehefa en ligne 
 
 MEDIA_URL  ="/media/"
 MEDIA_ROOT = BASE_DIR / "media"
