@@ -3,7 +3,7 @@ import {useState} from "react"
 import auth_img from  "../assets/Images/Rova.jpg"
 import viewbtn from  "../assets/Icons/view.png"
 import visible from  "../assets/Icons/visible.png"
-import logos from "../assets/Images/Logos.png";
+import logos from "../assets/Images/logos.png";
 import api from "../api"
 import {useNavigate} from "react-router-dom"
 
