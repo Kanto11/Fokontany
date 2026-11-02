@@ -89,13 +89,6 @@
     gap: 0.3rem;   
 }
 
-
-.habitant__main-content {
-    padding-top: 4.5rem;   
-    padding-bottom: 4.5rem;
-}
-
-
 @include respond("md"){
     
     .habitant__headers__containt {
@@ -131,7 +124,6 @@
 
    
     .habitant__main-content {
-        padding-top: 7.5rem; 
         padding-bottom: 0;  
     }
 }

@@ -20,7 +20,8 @@ const date = (d) => (d ? new Date(d).toLocaleDateString("fr-FR") : "—");
 function messageErreur(err) {
   const d = err.response?.data;
   if (!d) return "Le serveur ne répond pas.";
-  if (typeof d.detail === "string") return d.detail;
+  if (typeof d.detail === "string") 
+    return `Erreur du serveur (code ${err.response.status}). Réessaie ou préviens l'administrateur.`;
   if (Array.isArray(d.detail)) return d.detail.join(" ");
   return Object.entries(d)
     .map(([champ, v]) => `${champ} : ${[].concat(v).join(" ")}`)

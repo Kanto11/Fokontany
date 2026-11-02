@@ -107,7 +107,7 @@ export default function MesResidence(){
             <div className="residencesH__headers">
                 <div className="wrapper">
                     <div className="residences__headers__container">
-                        <h3>Mes demandes de résidence</h3>
+                        <h3 className="section__title">Mes demandes de résidence</h3>
                          <div className="res__resp__nouveau">
                                 <button className="btn__ajouter" onClick={ouvrir}> <img src={ajouter} alt="" /><span>Nouveau Residence</span> </button>
                         </div>
@@ -129,39 +129,46 @@ export default function MesResidence(){
                         ): residences.length === 0 ?(
                             <p>Tu n'as pas encore fait aucune demande</p>
                         ):(
-                            <table>
-                                <thead>
-                                    <tr>
-                                        <th>Personne</th>
-                                        <th>Motif</th>
-                                        <th>Date</th>
-                                        <th>Status</th>
-                                        <th>Details</th>
-                                    </tr>
-                                </thead>
-                                <tbody>
+                            <>
+                            <div className="liste__resH">
+                                    <ul>
+                                        
                                     {residences.map((r) => {
                                         const e = etat(r,famille.montant);
                                         const telechargeable = r.status === "VALIDE" && r.valable_jusqu_au >= aujourdhui();
                                         return(
-                                            <tr key={r.id}>
-                                                <td>{r.personne}</td>
-                                                <td>{r.motif}</td>
-                                                <td>{date(r.date_Resid)}</td>
-                                                <td>{e.badge}</td>
-                                                <td>{e.texte}</td>
-                                                <td>
+                                            <li key={r.id}>
+                                                <div className="info__resH">
+                                                    <label htmlFor="" className="resH_info">Titulaire :</label>
+                                                    <label className="resH__value">{r.personne}</label>
+                                                </div>
+                                                <div className="info__resH">
+                                                    <label htmlFor="" className="resH_info">Date de demande :</label>
+                                                    <label className="resH__value">{date(r.date_Resid)}</label>
+                                                </div>
+                                                <div className="info__resH">
+                                                    <label htmlFor="" className="resH_info">Motif :</label>
+                                                    <label htmlFor="" className="resH__value">{r.motif}</label>
+                                                </div>
+                                                <label className="resH__alert">{e.texte}</label>
+                                                <div className="info__resH resH__badges">
+                                                    <label className="resH__badge">{e.badge}</label>
+                                                </div>
+                                                    
+                                                <div>
                                                     {telechargeable &&(
                                                         <button onClick={() => telecharger(r.id)}>Telecharger le PDF</button>
                                                     )}
-                                                </td>
-                                            </tr>
+                                                </div>
+                                            </li>
                                         )
                                     })}
-                                </tbody>
-                            </table>
+                                    </ul>
+                            </div>
+                            </>
                         )}
                     </div>
+                    
                 </div>
             </div>
 

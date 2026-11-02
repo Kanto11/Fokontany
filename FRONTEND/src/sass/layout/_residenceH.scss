@@ -1,0 +1,56 @@
+@use '../abstract' as * ;
+.residences__headers__container{
+    padding-top: 5rem;
+}
+.liste__resH{
+    margin-top: 1rem;
+    li{
+        padding: 1rem;
+        border-radius: 1rem;
+        border: 1px solid $bg-gris-section;
+        display: flex;
+        flex-direction:column;
+        border-left: 1px solid $color-jaune;
+        color: $color-gris;
+    }
+}
+.resH_info{
+    font-weight: bold;
+    color: $color-gris;
+}
+.resH__value{
+    font-weight:400;
+    color: $color-gris;
+}
+.resH__alert{
+    color: rgb(146, 27, 27);
+    font-weight: 400;
+}
+.resH__badges{
+    display: flex;
+    justify-content: flex-end;
+    
+}
+.resH__badge{
+    background-color: rgb(221, 125, 125);
+    color: rgb(34, 6, 6);
+    font-weight: 400;
+    padding: 0.2rem;
+    border-radius: 1rem;
+    width: 25%;
+    display: flex;
+    justify-content: center;
+   
+    
+
+}
+
+@include respond("md"){
+    .residences__headers__container{
+        padding-top: 9rem;
+    }
+    .liste__resH{
+        display: flex;
+
+    }
+}
