@@ -1,0 +1,32 @@
+@use '../abstract' as * ;
+.residences__Resp{
+    padding: 2rem;
+}
+
+
+
+.pagination_img{
+    width: 1.5rem;
+    height: 1.5rem;
+}
+.pagination_img2{
+    width: 0.8rem;
+    height: 0.8rem;
+}
+.pagination__parent{
+    padding-top:2rem ;
+    display: flex;
+    margin: auto;
+    width: 30%;
+    flex-direction: column;
+    color: $color-gris;
+    align-items: center;
+}
+.pagination__action{
+    display: flex;
+    align-items: center;
+   
+}
+.pagination__info{
+    display: flex;
+}

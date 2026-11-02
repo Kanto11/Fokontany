@@ -1,0 +1,53 @@
+@use '../abstract' as *;
+.costisations__containers{
+    margin-top: 2rem;
+}
+.cotisations__header{
+        width: 60%;
+        margin: auto;
+}
+
+.cotisations__stat{
+    display: flex;
+    justify-content:space-around;
+    background-color: $color-blanc;
+    border-radius: 1rem;
+    padding: 1rem;
+    
+}
+.cot__child__center{
+    border-left: 1px $border-color solid;
+    border-right: 1px $border-color solid;
+    padding: 0 4rem;
+}
+.cotisations__stat__child{
+    text-align: center;
+    
+}
+
+.cotisations__filtre{
+
+    margin: auto;
+    @include dflex();
+    gap: 1rem;
+    padding: 2rem 0;
+}
+.cot__filtre__child{
+    width: 100%;
+}
+
+//encaisser 
+.modalencaisser{
+    width: 30%;
+    label{
+        display: flex;
+        gap: 1rem;
+        cursor:pointer;
+        margin: 1rem 0;
+    }
+ 
+}
+.cotisations__body{
+    padding: 2rem;
+   
+}

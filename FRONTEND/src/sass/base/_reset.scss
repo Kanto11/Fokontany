@@ -54,3 +54,51 @@ label{
 p{
     color: $color-gris;
 }
+table{
+    background-color: $color-blanc;
+    border-radius: 1rem;
+}
+input[type="checkbox"] {
+    appearance: checkbox !important;
+    -webkit-appearance: checkbox !important;
+    width: 1rem;
+    height: 1rem;
+    cursor: pointer;   
+    accent-color: $placeholder-color; 
+}
+
+ table{
+        width: 100%;
+        text-align: left;
+        border-radius: 1rem;
+        color: $color-gris;
+        border-collapse: collapse;
+        padding: 1rem;
+        thead{
+            tr{
+                height: 3rem;
+                font-family: $font-stat-info;
+                font-size: 0.8rem;
+            }
+        }
+
+        tbody{
+            tr{
+                height: 3rem;
+                border-bottom: 1px solid #f0f0f0;
+                font-size: 0.8rem;
+            }
+            th{
+                
+                padding: 1rem;
+            }
+        }
+        
+    }
+
+    .td__first{
+        padding-left: 1rem;
+    }
+    .error{
+        color: red;
+    }

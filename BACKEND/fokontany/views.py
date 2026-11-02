@@ -1,20 +1,31 @@
 from django.shortcuts import render
-from datetime import date
-from rest_framework.permissions import IsAuthenticated
+from django.db import IntegrityError
+from django.db import transaction
 from rest_framework.response import Response
+from datetime import date
+from django.utils.dateparse import parse_date
+from decimal import Decimal
+from django.core.paginator import Paginator 
+from django.http import HttpResponse
+
 from rest_framework.views import APIView;
 from rest_framework.generics import ListAPIView;
 from rest_framework.generics import ListCreateAPIView;
 from rest_framework.generics import RetrieveAPIView;
-from django.db.models import Q
+
+from django.db.models import Q ,Sum
 from django.shortcuts import get_object_or_404
+from django.core.exceptions import ValidationError as DjangoValidationError
+
+from rest_framework.permissions import IsAuthenticated
 from .auth_api import EstResponsable
 from .auth_api import EstHabitant
 from .auth_api import  EstAuteurPublication
-from .cotisations import mois_depuis , tarif_actuel
-from .serializers import (LogementCreateSerializer,CarnetDetailSerializer,CarnetListSerializer,SecteurSerializer,PhotoSerializer,PublicationSerializer,PublicationCreateSerializer,MessageSerializer,MessageCreateSerializer,ResponsableSerializer,CarnetCreateSerializer,NationaliteSerializer,LogementSerializer,QuartierSerializer,ProfessionSerializer,CarnetImpayeSerializer,PaiementEspeceSerializer)
+from .cotisations import  tarif_residence, controle_auto,mois_depuis ,situation_carnet,tarifs_cotisations, tarif_actuel , tarif_du_mois
+from .serializers import ( ResidenceBureauSerializer,ResidenceDemandeSerializer,ResidenceHabitantSerializer,PaiementEspeceSerializer,LogementCreateSerializer,CarnetDetailSerializer,CarnetListSerializer,SecteurSerializer,PhotoSerializer,PublicationSerializer,PublicationCreateSerializer,MessageSerializer,MessageCreateSerializer,ResponsableSerializer,CarnetCreateSerializer,NationaliteSerializer,LogementSerializer,QuartierSerializer,ProfessionSerializer,CarnetImpayeSerializer,PaiementEspeceSerializer)
+from .certificat import *
 from .models import *
-from django.utils.dateparse import parse_date
+
 
 
 class MoiView(APIView):
@@ -29,7 +40,8 @@ class MoiView(APIView):
             nom , prenom , photo = responsable.nom_R , responsable.prenom_R ,  responsable.photo
             fonction = responsable.type_responsable.nom_TR
         elif parent :
-            nom , prenom , photo = parent.nom_P , parent.prenom_P,parent.photo , fonction=None
+            nom , prenom , photo = parent.nom_P , parent.prenom_P,parent.photo 
+            fonction=None
         else : 
             nom ,prenom , photo,fonction = "" , "" ,None ,None
 
@@ -127,10 +139,10 @@ class CotisationHabitantView(APIView):
         if carnet is None :
             return Response({"detail": "Aucun carnet lié à ce compte"}, status=400)
 
-        payes = set(carnet.cotisations.filter(status_Cot= Cotisation.PAYE).value_list("annee_Cot","mois_Cot"))
+        payes = set(carnet.cotisations.filter(status_Cot= Cotisation.PAYE).values_list("annee_Cot","mois_Cot"))
         mois = [{"annee": a , "mois":m , "status" : "PAYE" if (a,m) in payes else "IMPAYE"} for a,m in mois_depuis(carnet)]
 
-        nb  = sum(1 for x in mois if x["statut"]=="IMPAYE")
+        nb  = sum(1 for x in mois if x["status"]=="IMPAYE")
         tarif = tarif_actuel(carnet.logement.secteur.quartier)
         return Response({
             "carnet" : carnet.id,
@@ -139,7 +151,64 @@ class CotisationHabitantView(APIView):
             "total_du" : tarif.prix_Tf * nb if tarif else None,
             "mois" : mois,
         })
-        
+
+class CotisationResponsableView(APIView):
+    permission_classes = [EstResponsable]
+
+    def get(self,request) :
+        quartier = quartier_de(request.user)
+        aujourdhui = date.today()
+        tarifs = tarifs_cotisations(quartier) 
+
+        carnets =  (Carnet.objects.filter(logement__secteur__quartier = quartier).select_related("logement__secteur" ,"pere" , "mere").prefetch_related("cotisations")) 
+
+        lignes = []
+        for c in carnets:
+            impayes,dernier = situation_carnet(c, tarifs , aujourdhui)
+            chef =  c.pere or c.mere
+            lignes.append({
+                "carnet_id" : c.id,
+                "chef" : f"{chef.nom_P} {chef.prenom_P}" if chef else "_",
+                "secteur" : c.logement.secteur.nom_S or f"Secteur {c.logement.secteur_id}",
+                "secteur_id" : c.logement.secteur_id,
+                "dernier_mois_paye" : f"{dernier[0]}-{dernier[1]:02d}" if dernier else None,
+                "nb_impayes" : len(impayes),
+                "montant_du" : sum(float(i["prix"]) for i in impayes),
+                "mois_impayes" : impayes
+            })  
+
+            #compteur
+        encaisse = (Paiement.objects
+                .filter(carnet__logement__secteur__quartier = quartier , status_Pay="VALIDE" , tarif__nom_Tf = "Cotisations par mois", date_Pay__year = aujourdhui.year , date_Pay__month =  aujourdhui.month)
+                .aggregate(t = Sum("montant"))["t"] or 0)
+
+        resume = {
+                "encaisse_mois" : float(encaisse),
+                "familles_a_jour" : sum(1 for l in lignes if l["nb_impayes"] == 0 ),
+                "familles_en_retard" : sum(1 for l in lignes if l["nb_impayes"] > 0),
+
+            }
+
+            #filtres
+        q =  request.query_params.get("q" , "").strip().lower()
+        secteur =  request.query_params.get("secteur" , "")
+        statut = request.query_params.get("statut" , "retard")
+
+        if q :
+            lignes = [l for l in lignes if q in l["chef"].lower()]
+
+        if secteur :
+            lignes = [l for l in lignes if str(l["secteur_id"]) == secteur]
+
+        if statut == "retard":
+            lignes = [l for l in lignes if l["nb_impayes"] > 0]
+
+        elif statut == "jour" :
+            lignes = [l for l in lignes if l["nb_impayes"] == 0]
+
+        lignes.sort(key = lambda l:l["nb_impayes"], reverse = True)
+        return Response ({"resume" : resume,"resultats" :lignes})
+
 class ImpayeView(APIView):
     permission_classes = [EstResponsable]
 
@@ -168,65 +237,13 @@ class ImpayeView(APIView):
             "carnets": CarnetImpayeSerializer(carnets, many=True).data,
         })
 
-class CotisationHabitantView(APIView):
-    permission_classes = [EstHabitant]
-
-    def get(self, request):
-        parent = getattr(request.user, "parent", None)
-        carnet = parent.carnet if parent else None
-        if carnet is None:
-            return Response({"detail": "Aucun carnet lié à ce compte."}, status=400)
-        payes = set(carnet.cotisations.filter(status_Cot=Cotisation.PAYE)
-                    .values_list("annee_Cot", "mois_Cot"))
-        mois = [{"annee": a, "mois": m, "statut": "PAYE" if (a, m) in payes else "IMPAYE"}
-                for a, m in mois_depuis(carnet)]
-        nb = sum(1 for x in mois if x["statut"] == "IMPAYE")
-        tarif = tarif_actuel(carnet.logement.secteur.quartier)
-        return Response({
-            "carnet": carnet.id,
-            "montant_mensuel": tarif.prix_Tf if tarif else None,
-            "nb_impayes": nb,
-            "total_du": tarif.prix_Tf * nb if tarif else None,
-            "mois": mois,
-        })
-
-
-class ImpayesView(APIView):
-    permission_classes = [EstResponsable]
-
-    def get(self, request):
-        today = date.today()
-        try:
-            annee = int(request.query_params.get("annee", today.year))
-            mois = int(request.query_params.get("mois", today.month))
-        except ValueError:
-            return Response({"detail": "annee et mois doivent être des nombres."}, status=400)
-        if not 1 <= mois <= 12:
-            return Response({"detail": "mois doit être entre 1 et 12."}, status=400)
-
-        quartier = request.user.responsable.quartier
-        payes = (Cotisation.objects
-                 .filter(status_Cot=Cotisation.PAYE, annee_Cot=annee, mois_Cot=mois)
-                 .values("carnet_id"))
-        carnets = (Carnet.objects
-                   .filter(logement__secteur__quartier=quartier, statut="ACTIF")
-                   .filter(Q(date_creation__year__lt=annee)
-                           | Q(date_creation__year=annee, date_creation__month__lte=mois))
-                   .exclude(id__in=payes)
-                   .select_related("logement", "pere", "mere")
-                   .order_by("logement__adr_Log"))
-        return Response({
-            "annee": annee, "mois": mois, "nombre": carnets.count(),
-            "carnets": CarnetImpayeSerializer(carnets, many=True).data,
-        })
-
 
 class PaiementEspecesView(APIView):
     permission_classes = [EstResponsable]
 
     def post(self, request):
         responsable = request.user.responsable
-        s = PaiementEspecesSerializer(data=request.data)
+        s = PaiementEspeceSerializer(data=request.data)
         s.is_valid(raise_exception=True)
         d = s.validated_data
         carnet = d["carnet"]
@@ -234,25 +251,31 @@ class PaiementEspecesView(APIView):
         quartier = carnet.logement.secteur.quartier
         if quartier.id != responsable.quartier_id:
             return Response({"detail": "Ce carnet n'est pas dans ton quartier."}, status=403)
-        tarif = tarif_actuel(quartier)
-        if tarif is None:
+
+        tarif = tarifs_cotisations(quartier)
+        if not tarif:
             return Response({"detail": "Aucun tarif défini pour ce quartier."}, status=400)
 
         demandes = {(x["annee"], x["mois"]) for x in d["mois"]}
         if len(demandes) != len(d["mois"]):
             return Response({"detail": "Un mois est répété dans la liste."}, status=400)
+
+
         deja = set(carnet.cotisations.filter(status_Cot=Cotisation.PAYE)
                    .values_list("annee_Cot", "mois_Cot"))
         if demandes & deja:
             return Response({"detail": "Certains mois sont déjà payés.",
                              "mois": sorted(demandes & deja)}, status=400)
-
+        total = sum(tarif_du_mois(tarif,a,m).prix_Tf for a ,m in demandes)
+        tarif = tarif_du_mois(tarif ,*max(demandes))
+        
         try:
-            with transaction.atomic():          # le paiement et ses mois, ou rien
+            with transaction.atomic():          
                 paiement = Paiement.objects.create(
                     carnet=carnet, responsable=responsable, tarif=tarif,
                     mode_Pay="ESPECES", reference_Pay=d.get("reference", ""),
-                    statut_Pay="VALIDE", montant=tarif.prix_Tf * len(demandes))
+                    status_Pay="VALIDE", 
+                    montant= total)
                 for a, m in sorted(demandes):
                     cot, _ = Cotisation.objects.get_or_create(
                         carnet=carnet, annee_Cot=a, mois_Cot=m)
@@ -263,7 +286,7 @@ class PaiementEspecesView(APIView):
             return Response({"detail": "Cette référence de reçu existe déjà."}, status=400)
 
         return Response({
-            "paiement": paiement.id, "montant": paiement.montant,
+            "paiement": paiement.id, "montant":  float(paiement.montant),
             "mois_payes": sorted(demandes),
         }, status=201)
 
@@ -446,4 +469,316 @@ class CarnetDetailView(RetrieveAPIView):
         )
 
 
+class ResidenceHabitantView(APIView) :
+    permission_classes = [EstHabitant]
 
+    def get(self,request):
+        parent = request.user.parent
+        qs = (Residence.objects.filter(demandeur = parent).select_related("parent_concerne" ,"enfant_concerne").order_by("-id"))
+        return Response(ResidenceHabitantSerializer(
+            qs, many = True , context={"request" : request}
+        ).data)
+
+    def post(self,request):
+        parent = request.user.parent
+        s = ResidenceDemandeSerializer(data = request.data)
+        s.is_valid(raise_exception=True)
+        d = s.validated_data
+        carnet = parent.carnet
+        quartier = carnet.logement.secteur.quartier
+
+        tarif =  tarif_residence(quartier)
+        if tarif is None:
+            return Response({"detail": "Le tarif de la residence n'est pas encore defini"},status=400)
+
+        #cotisations a jour obligatoires
+
+        impayes,_=situation_carnet(carnet,tarifs_cotisations(quartier))
+        if impayes :
+            return Response({
+                "detail" : "Tu as des cotisations impayes a regler d'abord."
+                ,"code" : "impayes" , "mois" :impayes,
+                "montant_du" : sum(i["prix"] for i in impayes)
+            },status=400)
+
+        en_cours = Residence.objects.filter(carnet=carnet , parent_concerne = d.get("parent_concerne"),
+        enfant_concerne =  d.get("enfant_concerne")
+        ).filter(Q(status__in=["A_PAYER" , "EN_ATTENTE"]) | Q(status="VALIDE" , revoquee= False, valable_jusqu_au__gte=date.today()))
+
+        if en_cours.exists():
+            return Response({"detail" : "Une demande ou un certificat valable existe deja pour cette personne"},status = 400)
+
+        r =  Residence(carnet=carnet , demandeur=parent , motif=d["motif"],parent_concerne = d.get("parent_concerne") , enfant_concerne = d.get("enfant_concerne"))
+
+        try:
+            r.full_clean()
+        except DjangoValidationError as e :
+            return Response({"detail": e.messages},status=400)
+        r.save()
+        return Response({"id" : r.id , "status" : r.status , "montant_a_payer" : float(tarif.prix_Tf)}, status=201)
+
+class ResidenceEncaisserView(APIView):
+        permission_classes = [EstResponsable]
+
+        def post(self, request , pk):
+            responsable = request.user.responsable
+            residence =  get_object_or_404(Residence, pk = pk)
+            quartier = residence.carnet.logement.secteur.quartier
+            if quartier.id != responsable.quartier_id:
+                return Response({"detail" : "Cette demande n'est pas dans ton quartier"},status = 403)
+
+            if residence.status != "A_PAYER":
+                return Response({"detail" : "Cette demande n'est pas dans ton quartier"} , status=400)
+
+            tarif = tarif_residence(quartier)
+            if tarif is None:
+                return Response({"detail": "Le tarif de la résidence n'est pas défini."}, status=400)
+
+            try:
+                with transaction.atomic():
+                    paiement, blocages = encaisser_residence(
+                    residence, responsable, request.data.get("reference", ""))
+            except IntegrityError:
+                return Response({"detail": "Cette référence de reçu existe déjà."}, status=400)
+            return Response({"status" : residence.status, "blocages" : blocages,"montant" : float(paiement.montant)}, status=201)
+
+def demande_en_cours(carnet, parent_concerne, enfant_concerne):
+    return (Residence.objects
+            .filter(carnet=carnet, parent_concerne=parent_concerne,
+                    enfant_concerne=enfant_concerne)
+            .filter(Q(status__in=["A_PAYER", "EN_ATTENTE"]) |
+                    Q(status="VALIDE", revoquee=False, valable_jusqu_au__gte=date.today()))
+            .exists())
+
+def encaisser_residence(residence, responsable, reference=""):
+    quartier = residence.carnet.logement.secteur.quartier
+    tarif = tarif_residence(quartier)
+    paiement = Paiement.objects.create(
+        carnet=residence.carnet, parent=residence.demandeur, responsable=responsable,
+        tarif=tarif, mode_Pay="ESPECES", reference_Pay=reference,
+        status_Pay="VALIDE", montant=tarif.prix_Tf)
+    residence.paiement = paiement
+    residence.status = "EN_ATTENTE"
+    residence.save()
+    blocages = controle_auto(residence)
+    if not blocages:
+        residence.valider(responsable=responsable, auto=True)        
+    return paiement, blocages
+
+def _ligne_residence(r, request):
+    p = r.parent_concerne or r.enfant_concerne
+    nom = f"{p.nom_P} {p.prenom_P}" if r.parent_concerne else f"{p.nom_Ef} {p.prenom_Ef}"
+    chef = r.carnet.pere or r.carnet.mere
+    return {
+        "id": r.id,
+        "personne": nom,
+        "photo": request.build_absolute_uri(p.photo.url) if p.photo else None,
+        "famille": f"{chef.nom_P} {chef.prenom_P}" if chef else "_",
+        "secteur": r.carnet.logement.secteur.nom_S,
+        "motif": r.motif,
+        "status": r.status,
+        "revoquee": r.revoquee,
+        "date_demande": r.date_Resid,
+        "date_validation": r.date_validation,
+        "valable_jusqu_au": r.valable_jusqu_au,
+        "validation_auto": r.validation_auto,
+        "motif_refus": r.motif_refus,
+        "montant_paye": float(r.paiement.montant) if r.paiement else None,
+        "blocages": controle_auto(r) if r.status == "EN_ATTENTE" else [],
+    }
+
+
+class ResidenceBureauView(APIView):
+
+    permission_classes = [EstResponsable]
+
+    def post(self, request):
+        responsable = request.user.responsable
+        s = ResidenceBureauSerializer(data=request.data)
+        s.is_valid(raise_exception=True)
+        d = s.validated_data
+        carnet = d["carnet"]
+
+        quartier = carnet.logement.secteur.quartier
+        if quartier.id != responsable.quartier_id:
+            return Response({"detail": "Ce carnet n'est pas dans ton quartier."}, status=403)
+        if tarif_residence(quartier) is None:
+            return Response({"detail": "Le tarif de la résidence n'est pas défini."}, status=400)
+        if demande_en_cours(carnet, d.get("parent_concerne"), d.get("enfant_concerne")):
+            return Response({"detail": "Une demande ou un certificat valable existe déjà "
+                                       "pour cette personne."}, status=400)
+
+        r = Residence(carnet=carnet, demandeur=d["demandeur"], motif=d["motif" ],status="A_PAYER",
+                      parent_concerne=d.get("parent_concerne"),
+                      enfant_concerne=d.get("enfant_concerne"))
+        try:
+            r.full_clean()       
+        except DjangoValidationError as e:
+            return Response({"detail": e.messages}, status=400)
+
+        blocages = []
+        try:
+            with transaction.atomic():
+                r.save()
+                if d["paye"]:
+                    _, blocages = encaisser_residence(r, responsable, d.get("reference", ""))
+        except IntegrityError:
+            return Response({"detail": "Cette référence de reçu existe déjà."}, status=400)
+
+        return Response({"id": r.id, "status": r.status, "blocages": blocages}, status=201)
+
+class ResidenceResponsableListView(APIView):
+    permission_classes = [EstResponsable]
+
+    def get(self, request):
+        quartier = quartier_de(request.user)
+        base = (Residence.objects
+                .filter(carnet__logement__secteur__quartier=quartier)
+                .select_related("carnet__logement__secteur", "carnet__pere", "carnet__mere",
+                                "parent_concerne", "enfant_concerne", "paiement"))
+
+        compteurs = {
+            "A_PAYER": base.filter(status="A_PAYER").count(),
+            "EN_ATTENTE": base.filter(status="EN_ATTENTE").count(),
+            "VALIDE": base.filter(status="VALIDE", revoquee=False).count(),
+            "REFUSE": base.filter(status="REFUSE").count(),
+            "REVOQUEE": base.filter(revoquee=True).count(),
+        }
+
+        statut = request.query_params.get("statut", "EN_ATTENTE")
+        if statut == "REVOQUEE":
+            qs = base.filter(revoquee=True)
+        elif statut == "VALIDE":
+            qs = base.filter(status="VALIDE", revoquee=False)
+        elif statut in ("A_PAYER", "EN_ATTENTE", "REFUSE"):
+            qs = base.filter(status=statut)
+        else:                                   # "tous"
+            qs = base
+
+        q = request.query_params.get("q", "").strip()
+        if q:
+            qs = qs.filter(
+                Q(parent_concerne__nom_P__icontains=q) | Q(parent_concerne__prenom_P__icontains=q)
+                | Q(enfant_concerne__nom_Ef__icontains=q) | Q(enfant_concerne__prenom_Ef__icontains=q)
+                | Q(carnet__pere__nom_P__icontains=q) | Q(carnet__mere__nom_P__icontains=q))
+
+        paginator = Paginator(qs.order_by("-id"), 4)
+        page = paginator.get_page(request.query_params.get("page"))
+        return Response({
+            "compteurs": compteurs,
+            "resultats": [_ligne_residence(r, request) for r in page],
+            "pagination": {"page": page.number, "pages": paginator.num_pages,
+                           "total": paginator.count},
+        })
+
+class ResidenceTraiterView(APIView):
+    permission_classes = [EstResponsable]
+
+    def post(self, request, pk):
+        responsable = request.user.responsable
+        r = get_object_or_404(Residence, pk=pk)
+        if r.carnet.logement.secteur.quartier_id != responsable.quartier_id:
+            return Response({"detail": "Cette demande n'est pas dans ton quartier."}, status=403)
+
+        action = request.data.get("action")
+        motif = (request.data.get("motif") or "").strip()
+
+        if action == "valider":
+            if r.status != "EN_ATTENTE":
+                return Response({"detail": "Cette demande n'est pas en attente."}, status=400)
+            r.valider(responsable=responsable)
+        elif action == "refuser":
+            if r.status != "EN_ATTENTE":
+                return Response({"detail": "Cette demande n'est pas en attente."}, status=400)
+            if not motif:
+                return Response({"detail": "Le motif du refus est obligatoire."}, status=400)
+            r.status, r.motif_refus, r.traite_par = "REFUSE", motif, responsable
+            r.save()
+        elif action == "revoquer":
+            if r.status != "VALIDE" or r.revoquee:
+                return Response({"detail": "Ce certificat n'est pas valide."}, status=400)
+            if not motif:
+                return Response({"detail": "Le motif de la révocation est obligatoire."}, status=400)
+            r.revoquee, r.motif_refus, r.traite_par = True, motif, responsable
+            r.save()
+        else:
+            return Response({"detail": "Action inconnue."}, status=400)
+
+        return Response({"id": r.id, "status": r.status, "revoquee": r.revoquee})
+
+class CarnetPersonnesView(APIView):
+    permission_classes = [EstResponsable]
+    def get(self,request,pk):
+        quartier = quartier_de(request.user)
+        carnet =  get_object_or_404(Carnet , pk=pk , logement__secteur__quartier = quartier)
+        parents = []
+
+        if carnet.pere : 
+            parents.append({"id" : carnet.pere.id , "role" : "Pere", "nom":f"{carnet.pere.nom_P} {carnet.pere.prenom_P}"})
+
+        if carnet.mere : 
+            parents.append({"id" : carnet.mere.id , "role" : "Mere" , "nom" : f"{carnet.mere.nom_P} {carnet.mere.prenom_P}"})
+
+        enfants = [{"id" : e.id, "nom" : f"{e.nom_Ef} {e.prenom_Ef}"}
+            for e in carnet.enfants.all()]
+        return Response({"parents": parents ,"enfants" : enfants})
+
+class ResidencePdfView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def get(self,request ,pk):
+        residence = get_object_or_404(Residence,pk=pk)
+        carnet = residence.carnet
+        user = request.user
+
+        if user.type.nom_T == "RESPONSABLE":
+            autorise = (carnet.logement.secteur.quartier_id == user.responsable.quartier_id )
+
+        else:
+            parent = getattr(user , "parent",None)
+            autorise = parent is not None and parent.id in (carnet.pere_id,carnet.mere_id)
+        if not autorise:
+            return Response({"detail":"Acces réfusé"},status = 403) 
+
+        if not residence.est_valable:
+            return Response({"detail" : "Ce certificat n'est pas valide" "(non valide, expiré ou révoqué)."},status=400)
+        reponse = HttpResponse(fabriquer_pdf(residence), content_type="application/pdf")
+        reponse["Content-Disposition"] = f'inline; filename="residence_{residence.id}.pdf"'
+        return reponse
+
+def personnes_du_carnet(carnet):
+    parents = []
+    if carnet.pere:
+        parents.append({"id" : carnet.pere.id , "role": "Père" , "nom":f"{carnet.pere.nom_P}{carnet.pere.prenom_P}"})
+
+    if carnet.mere:
+        parents.append({"id" : carnet.mere.id , "role" : "Mère","nom":f"{carnet.mere.nom_P} {carnet.mere.prenom_P}"})
+
+    enfants = [{"id" : e.id,"nom" : f"{e.nom_Ef} {e.prenom_Ef}"} for e in carnet.enfants.all()]
+    return {"parents" : parents , "enfants" : enfants}
+
+class FamilleHabitantView(APIView):
+    permission_classes = [EstHabitant]
+
+    def get(self,request):
+        carnet =  request.user.parent.carnet
+        tarif = tarif_residence(carnet.logement.secteur.quartier)
+        data = personnes_du_carnet(carnet)
+        data["montant"] = float(tarif.prix_Tf) if tarif else None
+        return Response (data)
+
+class PublicationsHabitantView(APIView):
+    permission_classes = [EstHabitant]
+
+    def get(self, request):
+        quartier = request.user.parent.carnet.logement.secteur.quartier
+        qs = Publication.objects.filter(quartier=quartier).order_by("-date_Pub")
+
+        paginator = Paginator(qs, 5)                      
+        page = paginator.get_page(request.query_params.get("page"))
+        return Response({
+            "resultats": [{"id": p.id, "texte": p.texte_Pub, "date": p.date_Pub}
+                          for p in page],
+            "pagination": {"page": page.number, "pages": paginator.num_pages,
+                           "total": paginator.count},
+        })

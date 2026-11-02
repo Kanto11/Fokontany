@@ -2,6 +2,11 @@
 .logos{
     font-family: $font-logos;
     color :$color-bleu;
+    @include dflex();
+    align-items: end;
+    img{
+        width: 3rem;
+    }
 }
 .fkt{
     font-size: 1.2rem;

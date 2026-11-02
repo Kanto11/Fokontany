@@ -1,6 +1,5 @@
 import { useEffect, useRef, useState } from "react";
 import api from "../../api";
-import ajouter from "../../assets/Icons/plus.png";
 import refresh from "../../assets/Icons/refresh-arrow.png";
 import CarnetDialog from "../RESPONSABLE/CarnetDialog";
 

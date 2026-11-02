@@ -1,0 +1,137 @@
+@use '../abstract' as * ;
+
+.profil__initiales{
+    width: 2rem;
+    height: 2rem;
+    border-radius: 50%;
+    color: $color-bleu;
+    background-color: $color-jaune;
+    font-weight: bold;
+}
+
+
+.habitant__headers {
+    position: fixed;  
+    top: 0;          
+    left: 0;           
+    width: 100%;     
+    z-index: 1000;  
+    box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
+    background-color: #ffffff; 
+}
+
+.habitant__headers__containt {
+    display: flex;
+    flex-direction: column; 
+}
+
+.habitant__headers__logos{
+    @include dflex();
+    justify-content: space-between;
+    align-items: center;
+    height: 3.75rem;
+    width: 100%;
+}
+
+.logos__habitant{
+   margin: 0;
+   display: flex;
+   align-items: end;
+}
+
+.right__header__connexion{
+    .profil{
+        font-size: 0.8rem;
+        align-items: center;
+    }
+}
+
+
+.habitant__headers__footer {
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    width: 100%;
+    background-color: #ffffff;
+    box-shadow: 0px -10px 15px -10px rgba(0, 0, 0, 0.15);
+    border-radius: 1rem 1rem 0 0; 
+    z-index: 1010;
+}
+
+.habitant__header__nav{
+    nav{
+        display: flex;
+        justify-content: space-around;
+        color: $color-gris;
+        font-family: $font-link;
+        padding: 8px 5px;
+        font-size: 0.7rem;
+        
+        img{
+            width: 1.2rem;
+            height: 1.2rem;
+        }
+        &.active { 
+            background: $bg-gris-section; 
+            font-family: $font-logos;
+        }
+        &:hover{
+            font-family: $font-logos;
+        }
+    }
+}
+
+.hab-nav{
+    display: flex;
+    flex-direction: column;
+    align-items: center;    
+    justify-content: center; 
+    gap: 0.3rem;   
+}
+
+
+.habitant__main-content {
+    padding-top: 4.5rem;   
+    padding-bottom: 4.5rem;
+}
+
+
+@include respond("md"){
+    
+    .habitant__headers__containt {
+        display: flex;
+        flex-direction: column; 
+
+    }
+
+    
+    .habitant__headers__footer {
+        position: static;     
+        box-shadow: none;     
+        border-radius: 0;     
+        border-top: 1px solid rgba(0,0,0,0.05); 
+        width: 50%;
+        margin: auto;
+    }
+
+    .habitant__header__nav {
+
+        nav {
+            justify-content:space-around;; 
+            gap: 3rem; 
+            font-size: 1rem;              
+        }
+        
+        
+        img{
+            width: 1.5rem;
+            height: 1.5rem;
+        }
+    }
+
+   
+    .habitant__main-content {
+        padding-top: 7.5rem; 
+        padding-bottom: 0;  
+    }
+}

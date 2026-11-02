@@ -6,6 +6,7 @@ import chat from "../../assets/Icons/message-bubbles.png"
 import publication from "../../assets/Icons/advertising.png"
 import cotisation from "../../assets/Icons/dollar.png"
 import Profil from "../Profil";
+import logos from "../../assets/Images/Logos.png";
 
 
 const LIENS = [
@@ -34,9 +35,14 @@ export default function LayoutResponsabe(){
         <div className="responsable">
             <div className="resp__left">
                 <div className="resp__left__header">
-                    <div className="logos logos__resp">
-                                <span className="fkt">Fkt</span>
-                                <span className="logos__lieu">Andohamandry</span>
+                     <div className="logos">
+                        <div className="img__logos">
+                            <img src={logos} alt="" />
+                        </div>
+                        <div className="text__logos">
+                            <span className="fkt">Fkt</span>
+                            <span className="logos__lieu">Andohamandry</span>
+                        </div>
                     </div>
                     <h5 className="espace">Espace Responsable</h5>
                     <div className="barre_resp"></div>

@@ -1,0 +1,65 @@
+@use '../abstract' as * ;
+.residences__resp__header{
+    width:60%;
+    background-color: $color-blanc;
+    border-radius: 1rem;
+    padding: 1rem;
+    margin: auto;
+    
+    
+
+}
+.res__resp__action{
+    position: relative;
+    display: flex;
+    justify-content: space-around;
+    span{
+        color: red;
+        font-weight: bold;
+        position: absolute;
+        top: 0;
+    }
+}
+
+.rep__tab__img{
+    display: flex;
+    gap: 1rem;
+    img{
+        width: 2rem;
+        height: 2rem;
+        border-radius: 50%;
+    }
+}
+
+ 
+
+.res___resp__body__head{
+    display: flex;
+    margin: auto;
+    width: 60%;
+    padding: 2rem;
+    gap: 1rem;
+}
+
+.res__resp__search{
+    width: 50%;
+}
+.pagination__info{
+    font-size: 0.7rem;
+}
+.badge__error{
+    color: red;
+}
+.badge__succes{
+    color: rgb(7, 112, 51)
+}
+.badge__warning{
+    color:rgb(252, 122, 0);
+}
+.badge__info{
+    color: $color-bleu;
+}
+.action__res__resp{
+    display: flex;
+    gap: 1rem;
+}

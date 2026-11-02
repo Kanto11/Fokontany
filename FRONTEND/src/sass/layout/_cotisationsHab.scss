@@ -1,0 +1,141 @@
+@use '../abstract' as * ;
+.cotisationsHab{
+    background-color: $color-blanc;
+
+}
+.cotisationsHab__header{
+    justify-content: center;
+    display: flex;
+    flex-direction: row;
+    padding: 1rem 0;
+}
+.alert--error{
+    display: flex;
+    color: $color-rouge;
+    align-items: center;
+    gap: 1rem;
+    img{
+        width: 1rem;
+        height: 1rem;
+    }
+
+}
+.alert--success{
+    color: rgb(24, 158, 24);
+}
+
+.cotisationsHab__stat{
+    margin: 2rem 0;
+    border-radius: 1rem;
+    padding: 1rem;
+    border:1px solid $bg-gris-section;
+    display: flex;
+    justify-content: space-between;
+}
+.stat{
+    padding: 1rem 0;
+    border-bottom: 1px solid $placeholder-color;
+}
+
+
+.stat__child__cot{
+
+    padding-left:  3rem;
+    padding-right: 3rem;
+}
+.mois-grid {
+    margin: 1rem;
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 1rem; 
+}
+
+
+
+.mois-card {
+  border: 1px solid $bg-gris-section; 
+  border-radius: 1rem;     
+  padding: 0.75rem;     
+  color: $color-bleu;    
+}
+
+.mois-card__nom {
+  font-weight: 600; 
+}
+
+.mois-card__annee {
+  font-size: 0.875rem; 
+  color: $color-gris; 
+  padding: 0.7rem 0;     
+}
+
+
+.mois-card__badge {
+    display: flex;
+    border-radius: 1rem;
+    padding-left: 5px;
+    margin-top: 5px;
+}
+
+
+
+.mois-card__badge--paye {
+  background-color:$bg-gris-section;
+  color: $color-gris;
+     
+}
+
+
+.mois-card__badge--impaye {
+  background-color: #fee2e2; 
+  color: #991b1b;            
+}
+
+.btn-paye{
+    background-color: $color-jaune;
+    color: $color-bleu;
+}
+ .stat{
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        border: none;
+}
+
+@include respond("md"){
+    .alert--error{
+        padding-top: 2rem;
+    }
+    .mois-grid {
+        grid-template-columns: repeat(4, minmax(0, 1fr));
+    }
+    .cotisationsHab__stat{
+        display: flex;
+        justify-content: space-around;
+        width: 60%;
+        margin: auto;
+        margin-top: 2rem;
+    }
+   
+    .stat{
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        border: none;
+    }
+    .stat__child__cot{
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        border-left: 1px $border-color solid;
+        border-right: 1px $border-color solid;
+        
+    }
+    .cotisationsHab__mois{
+        margin-top: 2rem;
+        label{
+            font-family: $font-logos;
+            padding-left: 1.2rem;
+        }
+    }
+}

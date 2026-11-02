@@ -1,5 +1,6 @@
 import io
 import uuid
+from datetime import date, timedelta
  
 import qrcode
 from django.contrib.auth.models import (
@@ -242,7 +243,7 @@ class Paiement(models.Model):
     class Meta:
         constraints = [
             models.UniqueConstraint(
-                fields=["mode_Pay","reference_Pay"],condition = models.Q(reference_Pay="") , name="paiement_reference_unique",),
+                fields=["mode_Pay","reference_Pay"],condition = ~models.Q(reference_Pay="") , name="paiement_reference_unique",),
         ]
 
     def __str__(self):
@@ -264,20 +265,33 @@ class Cotisation(models.Model):
         return f"Carnet {self.carnet_id} - {self.mois_Cot:02d}/{self.annee_Cot}"
 
 class Residence(models.Model):
-    STATUS =[("EN_ATTENTE","En attente"),("VALIDE","Valide"),("REFUSE","Refuse")]
+    STATUS =[("EN ATTENTE","En attente"),("VALIDE","Valide"),("REFUSE","Refuse"),("A_PAYER","A payer")]
     carnet = models.ForeignKey(Carnet ,  on_delete = models.CASCADE , related_name="demandes")
     demandeur = models.ForeignKey(Parent , on_delete=models.PROTECT)
     parent_concerne = models.ForeignKey(Parent , null=True, blank=True, on_delete=models.CASCADE,related_name="residences")
     enfant_concerne = models.ForeignKey(Enfant , null=True, blank=True, on_delete=models.CASCADE,related_name="residences")
     date_Resid = models.DateField(auto_now_add=True)
     motif = models.CharField(max_length=200)
-    status = models.CharField(max_length=10, choices = STATUS , default="EN ATTENTE")
-    traite_par = models.ForeignKey(Responsable,null=True, blank=True, on_delete=models.SET_NULL)
+    status = models.CharField(max_length=10, choices = STATUS , default="A_PAYER")
+    traite_par = models.ForeignKey(Responsable,null=True, blank=True, on_delete=models.SET_NULL )
     paiement = models.ForeignKey(Paiement ,  null=True, blank=True, on_delete=models.SET_NULL,related_name="paiement_residences")
 
+
+    token = models.UUIDField(null=True, blank=True, unique=True, editable=False)
+    qr_code = models.ImageField(upload_to="qr_residences/", blank=True)
+    date_validation = models.DateField(null=True, blank=True)
+    valable_jusqu_au = models.DateField(null=True, blank=True)
+    revoquee = models.BooleanField(default=False)
+    validation_auto = models.BooleanField(default = False)
+    motif_refus = models.CharField(max_length = 200 ,blank=True)
+
+    
     class Meta:
         constraints = [
-            models.CheckConstraint(condition=(models.Q(parent_concerne__isnull=False, enfant_concerne__isnull=True) | models.Q(parent_concerne__isnull=True, enfant_concerne__isnull=False)), name="residence_parent_xor_enfant"),
+            models.CheckConstraint(
+                condition=(models.Q(parent_concerne__isnull=False, enfant_concerne__isnull=True)
+                           | models.Q(parent_concerne__isnull=True, enfant_concerne__isnull=False)),
+                name="residence_parent_xor_enfant"),
         ]
 
     def clean(self):
@@ -289,6 +303,27 @@ class Residence(models.Model):
             raise ValidationError("Cet enfant n'appartient pas à ce carnet.")
         if self.parent_concerne and self.parent_concerne_id not in (c.pere_id, c.mere_id):
             raise ValidationError("Ce parent n'appartient pas à ce carnet.")
+
+    def valider(self, responsable=None ,auto=False):
+        self.status = "VALIDE"
+        self.traite_par = responsable
+        self.date_validation = date.today()     
+        self.validation_auto = auto 
+        self.valable_jusqu_au = date.today() + timedelta(days=90)   # environ 3 mois
+        
+        self.token = uuid.uuid4()
+        img = qrcode.make(f"https://TON-DOMAINE/verif/residence/{self.token}")
+        buf = io.BytesIO()
+        img.save(buf, format="PNG")
+        self.qr_code.save(f"residence_{self.pk}.png", ContentFile(buf.getvalue()), save=False)
+        self.save()
+
+    @property
+    def est_valable(self):
+        from datetime import date
+        return (self.status == "VALIDE" and not self.revoquee
+                and self.valable_jusqu_au is not None
+                and self.valable_jusqu_au >= date.today())
 
     def __str__(self):
         return f"Résidence n°{self.pk} ({self.status})"

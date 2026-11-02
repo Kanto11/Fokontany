@@ -2,7 +2,7 @@ from django.core.exceptions import ValidationError as DjangoValidationError
 from rest_framework import serializers 
 from django.db import transaction
 from .models import (
-    Secteur ,Responsable ,Carnet, Enfant, Logement, Parent, PieceIdentite, Type, User,Profession,Quartier,Nationalite,Message ,Publication 
+    Secteur ,Responsable ,Carnet, Enfant, Logement, Parent, PieceIdentite, Type, User,Profession,Quartier,Nationalite,Message ,Publication ,Residence
 )
 
 
@@ -383,4 +383,46 @@ class CarnetDetailSerializer(serializers.ModelSerializer):
             return obj.mere.tel_P
         return None
 
-#
+
+#Residence 
+class ResidenceDemandeSerializer(serializers.Serializer):
+    parent_concerne = serializers.PrimaryKeyRelatedField(
+        queryset=Parent.objects.all(),
+        required=False, 
+        allow_null=True
+    )
+
+    enfant_concerne = serializers.PrimaryKeyRelatedField(
+        queryset=Enfant.objects.all(),
+        required=False, 
+        allow_null=True
+    )
+    motif = serializers.CharField(max_length=200)
+
+    def validate(self, d):
+
+        parent = d.get("parent_concerne")
+        enfant = d.get("enfant_concerne")
+        
+        if bool(parent) == bool(enfant): 
+            raise serializers.ValidationError("Choisis un parent ou un enfant")
+        return d
+
+class ResidenceHabitantSerializer(serializers.ModelSerializer):
+    personne = serializers.SerializerMethodField()
+
+    class Meta:
+        model = Residence
+        fields = ["id" , "personne" ,"motif" ,"status" ,"date_Resid" , "date_validation","valable_jusqu_au" ,"revoquee","motif_refus" , "token" , "qr_code"]
+
+    def get_personne(self,r):
+        p = r.parent_concerne or r.enfant_concerne
+        if r.parent_concerne:
+            return f"{p.nom_P} {p.prenom_P}"
+        return f"{p.nom_Ef} {p.prenom_Ef}"
+
+class ResidenceBureauSerializer(ResidenceDemandeSerializer):
+    carnet = serializers.PrimaryKeyRelatedField(queryset=Carnet.objects.all())
+    demandeur = serializers.PrimaryKeyRelatedField(queryset=Parent.objects.all())
+    paye = serializers.BooleanField(default=True)     
+    reference = serializers.CharField(required=False, allow_blank=True, max_length=60)

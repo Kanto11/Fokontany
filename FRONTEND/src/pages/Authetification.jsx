@@ -3,7 +3,7 @@ import {useState} from "react"
 import auth_img from  "../assets/Images/Rova.jpg"
 import viewbtn from  "../assets/Icons/view.png"
 import visible from  "../assets/Icons/visible.png"
-
+import logos from "../assets/Images/Logos.png";
 import api from "../api"
 import {useNavigate} from "react-router-dom"
 
@@ -53,10 +53,16 @@ export default function Authentification(){
                         </div>
                         <div className="auth__text">
                             <div className="authentification__header">
-                                <div className="logos">
+                            <div className="logos">
+                                <div className="img__logos">
+                                    <img src={logos} alt="" />
+                                </div>
+                                <div className="text__logos">
                                     <span className="fkt">Fkt</span>
                                     <span className="logos__lieu">Andohamandry</span>
                                 </div>
+                                
+                            </div>
                                 <h3 className="auth__title">
                                 Page d'authentification
                                 </h3>

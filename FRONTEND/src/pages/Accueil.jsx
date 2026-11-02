@@ -1,6 +1,8 @@
 import { Link } from "react-router-dom";
 import burger from "../assets/Icons/burger-icon.svg"
 import photo from "../assets/Images/hero-right.jpg";
+import bureau from "../assets/Images/Bureau.png";
+import logos from "../assets/Images/Logos.png";
 import fleche from "../assets/Icons/fleche.png";
 export default function Accueil(){
     return(
@@ -12,9 +14,15 @@ export default function Accueil(){
                             <div className="burger__menu">
                                 <img src={burger} alt=""/>
                             </div>
-                            <div className="logos">
-                                <span className="fkt">Fkt</span>
-                                <span className="logos__lieu">Andohamandry</span>
+                             <div className="logos">
+                                <div className="img__logos">
+                                    <img src={logos} alt="" />
+                                </div>
+                                <div className="text__logos">
+                                    <span className="fkt">Fkt</span>
+                                    <span className="logos__lieu">Andohamandry</span>
+                                </div>
+                                                            
                             </div>
                         </div>
                 
@@ -35,7 +43,7 @@ export default function Accueil(){
             </header>
     <div className="hero">
         <div className="hero__img">
-            <img src={photo} alt=""/>
+            <img src={bureau} alt=""/>
         </div>
         <div className="hero__text">
             <div className="hero__titre">
