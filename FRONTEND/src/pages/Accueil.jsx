@@ -1,21 +1,30 @@
+import {useState} from "react"
 import { Link } from "react-router-dom";
 import burger from "../assets/Icons/burger-icon.svg"
-import photo from "../assets/Images/hero-right.jpg";
 import bureau from "../assets/Images/Bureau.png";
 import logos from "../assets/Images/logos.png";
-import chef from "../assets/Images/chef.jpg";
-import secretaire from "../assets/Images/secretaire.jpg";
 import comptable from "../assets/Images/comptable.jpg";
 import histoire from "../assets/Images/histoire.png";
 import fleche from "../assets/Icons/fleche.png";
 export default function Accueil(){
+    const [openMenu,setOpenMenu] = useState(false)
+    const [activeLink , setActivateLink] = useState("#apropos")
+
+    const toggleMenu = () => {
+        setOpenMenu(!openMenu);
+    }
+
+    const handleLinkClick = (link) =>{
+        setActivateLink(link);
+        setOpenMenu(false);
+    }
     return(
         <main>
              <header className="header">
                 <div className="wrapper">
                     <div className="header__container">
                         <div className="header__gauche">
-                            <div className="burger__menu">
+                            <div className="burger__menu" onClick={toggleMenu}>
                                 <img src={burger} alt=""/>
                             </div>
                              <div className="logos">
@@ -26,12 +35,20 @@ export default function Accueil(){
                             </div>
                         </div>
                 
-                        <div className="header__link">
+                        <div className={`header__link ${openMenu ? 'open' : ''}`}>
                             <ul>
-                                <li className="active"><a href="#apropos">Apropos</a></li>
-                                <li><a href="#histoire">Historique</a></li>
-                                <li><a href="#responsable">Responsable</a></li>
-                                <li><a href="#contact">Contact</a></li>
+                                <li className={activeLink === "#apropos" ? "active" : ""}>
+                                <a href="#apropos" onClick={() => handleLinkClick("#apropos")}>Apropos</a>
+                                </li>
+                                <li className={activeLink === "#histoire" ? "active" : ""}>
+                                <a href="#histoire" onClick={() => handleLinkClick("#histoire")}>Historique</a>
+                                </li>
+                                <li className={activeLink === "#responsable" ? "active" : ""}>
+                                <a href="#responsable" onClick={() => handleLinkClick("#responsable")}>Responsable</a>
+                                </li>
+                                <li className={activeLink === "#contact" ? "active" : ""}>
+                                <a href="#contact" onClick={() => handleLinkClick("#contact")}>Contact</a>
+                                </li>
                             </ul>
                     
                         </div>
@@ -65,7 +82,7 @@ export default function Accueil(){
             <div className="ver__res__container">
                 <h2 className="section__title">Verification du residence</h2>
                 <input type="text" placeholder="Numero de residence à verifier" />
-                <a>Cliquer ici por scanner..</a>
+                <a>Cliquer ici pour scanner..</a>
             </div>
         </div>
 

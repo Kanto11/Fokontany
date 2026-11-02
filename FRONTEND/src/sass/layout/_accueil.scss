@@ -33,17 +33,24 @@
     top: 3.75rem;
     left: 0;
     width: 100%;
-
+    background-color: $color-blanc;
+    &.open{
+        display: block;
+    }
     
     ul{
         color: $color-bleu;
+        display: flex;
+        flex-direction: column;
         li{
-            a{
+            a{  
+                display: block;
                 padding-left: 3rem;
+                width: 100%;
             }
             &:hover{
-                font-weight: bold;
-                background-color: $color-blanc;
+                background-color: rgba($color-jaune, 0.1); // Légère couleur de fond
+                border-left: solid 4px $color-jaune;
             }
         }
     }
@@ -89,7 +96,6 @@
 .ver__res__container{
     width: 70%;
     margin: auto;
-    padding-top: 2rem;
     display: flex;
     flex-direction: column;
     justify-content: center;
@@ -168,12 +174,13 @@
         display: none;
     }
     .header__link{
-        display: block;
+        display: block !important;
         position: static;
         width: auto;
         background-color: transparent;
         ul{
             display: flex;
+            flex-direction: row;
             gap : 3rem;
             
             li{
@@ -182,7 +189,13 @@
                 }
                 &.active{
                     font-weight: bold;
+                    background-color: transparent;
+                    border-left: none;
                     border-bottom: solid 2px $color-jaune; 
+                }
+                &:hover{
+                    background-color: transparent;
+                    
                 }
             }
         }
