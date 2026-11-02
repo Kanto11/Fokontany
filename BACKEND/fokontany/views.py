@@ -1,3 +1,4 @@
+import traceback
 from django.shortcuts import render
 from django.db import IntegrityError
 from django.db import transaction
@@ -588,8 +589,13 @@ def _ligne_residence(r, request):
     }
 
 
-class ResidenceBureauView(APIView):
+import traceback  # <-- N'oubliez pas d'ajouter cet import tout en haut du fichier
+from rest_framework.response import Response
+from rest_framework.views import APIView
+from django.core.exceptions import ValidationError as DjangoValidationError
+from django.db import transaction, IntegrityError
 
+class ResidenceBureauView(APIView):
     permission_classes = [EstResponsable]
 
     def post(self, request):
@@ -599,33 +605,44 @@ class ResidenceBureauView(APIView):
         d = s.validated_data
         carnet = d["carnet"]
 
-        quartier = carnet.logement.secteur.quartier
-        if quartier.id != responsable.quartier_id:
-            return Response({"detail": "Ce carnet n'est pas dans ton quartier."}, status=403)
-        if tarif_residence(quartier) is None:
-            return Response({"detail": "Le tarif de la résidence n'est pas défini."}, status=400)
-        if demande_en_cours(carnet, d.get("parent_concerne"), d.get("enfant_concerne")):
-            return Response({"detail": "Une demande ou un certificat valable existe déjà "
-                                       "pour cette personne."}, status=400)
-
-        r = Residence(carnet=carnet, demandeur=d["demandeur"], motif=d["motif" ],status="A_PAYER",
-                      parent_concerne=d.get("parent_concerne"),
-                      enfant_concerne=d.get("enfant_concerne"))
+        # Essayer d'exécuter toute la logique et attraper un éventuel crash caché
         try:
-            r.full_clean()       
-        except DjangoValidationError as e:
-            return Response({"detail": e.messages}, status=400)
+            quartier = carnet.logement.secteur.quartier
+            if quartier.id != responsable.quartier_id:
+                return Response({"detail": "Ce carnet n'est pas dans ton quartier."}, status=403)
+            if tarif_residence(quartier) is None:
+                return Response({"detail": "Le tarif de la résidence n'est pas défini."}, status=400)
+            if demande_en_cours(carnet, d.get("parent_concerne"), d.get("enfant_concerne")):
+                return Response({"detail": "Une demande ou un certificat valable existe déjà pour cette personne."}, status=400)
 
-        blocages = []
-        try:
-            with transaction.atomic():
-                r.save()
-                if d["paye"]:
-                    _, blocages = encaisser_residence(r, responsable, d.get("reference", ""))
-        except IntegrityError:
-            return Response({"detail": "Cette référence de reçu existe déjà."}, status=400)
+            r = Residence(carnet=carnet, demandeur=d["demandeur"], motif=d["motif"], status="A_PAYER",
+                          parent_concerne=d.get("parent_concerne"),
+                          enfant_concerne=d.get("enfant_concerne"))
+            
+            try:
+                r.full_clean()       
+            except DjangoValidationError as e:
+                return Response({"detail": e.messages}, status=400)
 
-        return Response({"id": r.id, "status": r.status, "blocages": blocages}, status=201)
+            blocages = []
+            try:
+                with transaction.atomic():
+                    r.save()
+                    if d["paye"]:
+                        _, blocages = encaisser_residence(r, responsable, d.get("reference", ""))
+            except IntegrityError:
+                return Response({"detail": "Cette référence de reçu existe déjà."}, status=400)
+
+            return Response({"id": r.id, "status": r.status, "blocages": blocages}, status=201)
+
+        except Exception as e:
+            # 1. Ceci va forcer l'affichage du crash exact (le Stack Trace) dans vos logs Render
+            print("--- DEBUT DU CRASH DETECTE ---")
+            print(traceback.format_exc())
+            print("--- FIN DU CRASH DETECTE ---")
+            
+            # 2. Cela renverra le vrai message de l'erreur au frontend à la place de la page HTML 500
+            return Response({"detail": f"Erreur interne interceptée : {str(e)}"}, status=500)
 
 class ResidenceResponsableListView(APIView):
     permission_classes = [EstResponsable]
