@@ -1,10 +1,10 @@
 @use '../abstract' as * ;
 button{
     height: 2rem;
-    padding:  0px 0.7rem;
+    padding:  0px 0.4rem;
     justify-content: center;
     border-radius: 1rem;
-    font-size: 0.8rem;
+    font-size: 0.72rem;
     &:hover{
         font-weight: bold;
     }
@@ -14,10 +14,11 @@ button{
 }
 
 .sign_up{
-    padding: 0.6rem;
+    padding: 0.4rem;
     border-radius: 1rem;
     background-color: $color-jaune ;
     color:  $color-bleu;
+    font-size: 0.72rem;
 }
 .btn__annuler{
     background-color:$border-color;
@@ -47,4 +48,16 @@ button{
 .btn-error{
     background-color: rgba(206, 96, 96, 0.795);
     color :$color-blanc
+}
+
+@include respond("md"){
+    button {
+            padding:  0px 0.7rem;
+            font-size: 0.75 rem;
+    }
+    .sign_up{
+        padding: 0px 0.7rem;
+        font-size: 0.75rem;
+    }
+
 }

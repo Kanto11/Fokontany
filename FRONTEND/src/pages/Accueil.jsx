@@ -3,6 +3,7 @@ import burger from "../assets/Icons/burger-icon.svg"
 import photo from "../assets/Images/hero-right.jpg";
 import bureau from "../assets/Images/Bureau.png";
 import logos from "../assets/Images/logos.png";
+import histoire from "../assets/Images/histoire.png";
 import fleche from "../assets/Icons/fleche.png";
 export default function Accueil(){
     return(
@@ -65,7 +66,7 @@ export default function Accueil(){
             <div className="apropos__container">
                 <div className="apropos__texte ">
                     <h2 className="section__title">A propos</h2>
-                    <p>Lorem ipsum dolor sit amet consectetur adipisicing elit. Iure nam quas voluptates non ratione dicta amet dolore illum, officia asperiores dolorum fuga provident beatae ad nulla dolorem ex, deserunt optio!</p>
+                    <p>Le Fokontany d'Andohamandry, situé dans le deuxieme arrondissement d'Antananarivo, est un quartier à la fois historique et résidentiel de la capitale malgache.</p>
                 </div>
                 <div className="apropos__stat">
                     <div className="gril__stat">
@@ -99,12 +100,14 @@ export default function Accueil(){
         <div className="wrapper">
             <div className="histoire__container">
                 <div className="histoire__img">
-                    <img src={photo} alt=""/>
+                    <img src={histoire} alt=""/>
                 </div>
                 <div className="histoire__texte">
                     <h2 className="section__title">Historiques</h2>
-                    <p>Lorem ipsum dolor sit, amet consectetur adipisicing elit. Eveniet, perferendis. Neque, quos, obcaecati cupiditate eaque veritatis itaque maiores minus, corporis iure ex asperiores animi. Veniam et debitis quasi nihil ab, quia dolorum accusamus, similique atque animi tempora natus! Repellat incidunt doloremque nam architecto. Aliquid, cumque repellat? Corporis maxime blanditiis delectus, saepe repellat minima, dolor velit dolorem deleniti reprehenderit nemo iste cupiditate similique impedit suscipit minus ad doloremque. Reiciendis cumque nostrum sed temporibus cum vero quasi, tempora quo perspiciatis debitis et eaque delectus? Consequatur praesentium neque consequuntur, accusamus nostrum error? Impedit ad libero quam sequi culpa nihil, delectus enim illum optio laborum blanditiis, magni voluptatum nesciunt! Quisquam ratione doloribus voluptate aliquid doloremque ut ducimus quaerat, quis tempore aperiam, nostrum debitis tempora animi blanditiis repellat. Iste rerum beatae aperiam nostrum maxime saepe consectetur, a obcaecati error, incidunt, nesciunt facilis iusto enim mollitia esse! Eligendi expedita eveniet incidunt minus eos, dignissimos, mollitia autem, nesciunt dolorem iusto aspernatur ex neque labore voluptates! Neque illum officiis iusto. Cumque explicabo voluptatem quasi deserunt porro velit.</p>
-                
+                    <p>Fondé en 1976 sur les hauteurs du 2e Arrondissement d'Antananarivo, à proximité d'Ambohipotsy, le Fokontany d'Andohamandry s'impose aujourd'hui comme un modèle d'urbanisme et de civisme au sein de la capitale. Ce quartier résidentiel se distingue particulièrement par son calme préservé et la valorisation rigoureuse de la propriété privée et collective, offrant un cadre de vie sécurisé, propre et hors du tumulte du centre-ville.
+                    </p>
+                    <p>--</p>
+                    <p>La force d'Andohamandry réside dans la dynamique de sa communication locale et ses activités communautaires régulées, qui associent technologies de proximité et comités de vigilance pour assurer une gestion transparente. Cette gouvernance participative et cet art de vivre exclusif font désormais de ce fokontany une référence inspirante et particulièrement attractive pour les résidents des autres secteurs de la ville.</p>
                 </div>
             </div>
         </div>
