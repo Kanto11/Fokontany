@@ -7,7 +7,7 @@ from reportlab.lib.utils import ImageReader
 from reportlab.pdfgen import canvas
 from django.conf import settings
 from reportlab.lib import colors
-LOGOS_PATH = os.path.join(settings.BASE_DIR, 'static', 'Images', 'logos.png')
+LOGOS_PATH = os.path.join(settings.BASE_DIR, 'static', 'images', 'logos.png')
 
 
 def fr(d):
@@ -77,7 +77,7 @@ def fabriquer_pdf(residence):
 
     # photo 
     try:
-        c.drawImage(ImageReader(p.photo.path), 2.5 * cm, H - 12.5 * cm,
+        c.drawImage(lire_image(p.photo), 2.5 * cm, H - 12.5 * cm,
                     3.5 * cm, 4.5 * cm, preserveAspectRatio=True, mask="auto")
     except Exception:
         c.rect(2.5 * cm, H - 12.5 * cm, 3.5 * cm, 4.5 * cm)     # cadre vide
@@ -110,7 +110,7 @@ def fabriquer_pdf(residence):
 
     # QR code 
     try:
-        c.drawImage(ImageReader(residence.qr_code.path), 2.5 * cm, 4.5 * cm, 4 * cm, 4 * cm)
+        c.drawImage(lire_image(residence.qr_code), 2.5 * cm, 4.5 * cm, 4 * cm, 4 * cm)
     except Exception:
         pass
     c.setFont("Helvetica", 8)
@@ -128,3 +128,10 @@ def fabriquer_pdf(residence):
     c.showPage()
     c.save()
     return buf.getvalue()
+
+def lire_image(champ):
+    champ.open("rb")
+    try:
+        return ImageReader(io.ByteIO(champ.read()))
+    finally:
+        champ.close()

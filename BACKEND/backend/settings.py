@@ -138,6 +138,8 @@ STORAGES = {
     "default": {"BACKEND": "django.core.files.storage.FileSystemStorage"},
     "staticfiles": {"BACKEND": "whitenoise.storage.CompressedStaticFilesStorage"},
 }
+if os.environ.get("CLOUDINARY_URL"):
+    STORAGES["default"] = {"BACKEND": "fokontany.storage.CloudinaryStorage"}
 
 # Email
 # https://docs.djangoproject.com/en/6.1/topics/email/#topic-email-configuration
