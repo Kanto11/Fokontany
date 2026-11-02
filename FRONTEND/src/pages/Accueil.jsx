@@ -3,6 +3,9 @@ import burger from "../assets/Icons/burger-icon.svg"
 import photo from "../assets/Images/hero-right.jpg";
 import bureau from "../assets/Images/Bureau.png";
 import logos from "../assets/Images/logos.png";
+import chef from "../assets/Images/chef.jpg";
+import secretaire from "../assets/Images/secretaire.jpg";
+import comptable from "../assets/Images/comptable.jpg";
 import histoire from "../assets/Images/histoire.png";
 import fleche from "../assets/Icons/fleche.png";
 export default function Accueil(){
@@ -18,10 +21,6 @@ export default function Accueil(){
                              <div className="logos">
                                 <div className="img__logos">
                                     <img src={logos} alt="" />
-                                </div>
-                                <div className="text__logos">
-                                    <span className="fkt">Fkt</span>
-                                    <span className="logos__lieu">Andohamandry</span>
                                 </div>
                                                             
                             </div>
@@ -61,6 +60,16 @@ export default function Accueil(){
             </div>
         </div>
     </div>
+    <section className="Verification__residence">
+        <div className="wrapper">
+            <div className="ver__res__container">
+                <h2 className="section__title">Verification du residence</h2>
+                <input type="text" placeholder="Numero de residence à verifier" />
+                <a>Cliquer ici por scanner..</a>
+            </div>
+        </div>
+
+    </section>
     <section className="apropos" id="apropos">
         <div className="wrapper">
             <div className="apropos__container">
@@ -121,29 +130,29 @@ export default function Accueil(){
                 <div className="responsable__card">
                     <div className="agent__resp card">
                         <div className="agent__img">
-                            <img src={photo} alt=""/>
+                            <img src={comptable} alt=""/>
                         </div>
                         <div className="agent__info">
-                            <p>Fonction :</p>
-                            <p>Nom :</p>
+                            <p>Chef de quartier</p>
+                            <p>RADOTIANA Michel</p>
                         </div>  
                     </div>
                     <div className="agent__resp card">
                         <div className="agent__img">
-                            <img src={photo} alt=""/>
+                            <img src={comptable} alt=""/>
                         </div>
                         <div className="agent__info">
-                            <p>Fonction :</p>
-                            <p>Nom :</p>
+                            <p>Secretaire</p>
+                            <p>RAVAO Marie</p>
                         </div>  
                     </div>
                     <div className="agent__resp card">
                         <div className="agent__img">
-                            <img src={photo} alt=""/>
+                            <img src={comptable} alt=""/>
                         </div>
                         <div className="agent__info">
-                            <p>Fonction :</p>
-                            <p>Nom :</p>
+                            <p>Comptable</p>
+                            <p>RANDRIA Tsinjo</p>
                         </div>  
                     </div>
                 </div>

@@ -17,15 +17,14 @@
 }
 .header__gauche{
    display: flex;
-   gap: 0.5rem;
+
 }
 .burger__menu{
-    background-color: $bg-gris;
     align-items: center;
     display: flex;
     img{
-        width: 1.50rem;
-        height: 1.50rem;
+        width: 1.2rem;
+        height: 1.2rem;
     }
 }
 .header__link{
@@ -86,6 +85,24 @@
         font-family: $font-hero-p;
     }
 }
+//
+.ver__res__container{
+    width: 70%;
+    margin: auto;
+    padding-top: 2rem;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    input{
+        margin: 1rem 0;
+    }
+    a{
+        color: $color-bleu;
+        font-size: 0.75rem;
+        text-decoration: underline;
+    
+    }
+}
 
 //________________________APROPOS___________________________
 .apropos{
@@ -130,15 +147,18 @@
 }
 .responsable__card{
     display: flex;
+    flex-direction: column;
     gap: 0.5rem;
 }
+
 .agent__img{
     img{
+        width: 100%;
+        height: auto;
         border-radius: 1rem 1rem 0 0 ;
     }
 }
 
-//_______________________RESPONSIVE_______________________
 
 @include respond("md"){
     .header__container{
@@ -230,10 +250,10 @@
         gap: 3rem;
     }
     .histoire__img{
-        width: 40%;
+        width: 50%;
     }
     .histoire__texte{
-        width: 60%;
+        width: 50%;
         h2{
         margin: 0;
         text-align: left;
@@ -241,6 +261,7 @@
     }
     //___________________RRESPONSABLE_____________________
     .responsable__card{
+        flex-direction: row;
         padding-top: 2rem;
         gap:2rem;
     }
