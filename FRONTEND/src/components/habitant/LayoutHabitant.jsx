@@ -1,5 +1,5 @@
 import { NavLink, Outlet, useNavigate, useLocation } from "react-router-dom";
-import logos from "../../assets/Images/Logos.png";
+import logos from "../../assets/Images/logos.png";
 import Profil from "../Profil";
 import Home from "../../assets/Icons/home.png";
 import cotisation from "../../assets/Icons/dollar.png";

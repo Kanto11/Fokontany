@@ -2,7 +2,7 @@ import { Link } from "react-router-dom";
 import burger from "../assets/Icons/burger-icon.svg"
 import photo from "../assets/Images/hero-right.jpg";
 import bureau from "../assets/Images/Bureau.png";
-import logos from "../assets/Images/Logos.png";
+import logos from "../assets/Images/logos.png";
 import fleche from "../assets/Icons/fleche.png";
 export default function Accueil(){
     return(

@@ -6,7 +6,7 @@ import chat from "../../assets/Icons/message-bubbles.png"
 import publication from "../../assets/Icons/advertising.png"
 import cotisation from "../../assets/Icons/dollar.png"
 import Profil from "../Profil";
-import logos from "../../assets/Images/Logos.png";
+import logos from "../../assets/Images/logos.png";
 
 
 const LIENS = [
