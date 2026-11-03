@@ -1,8 +1,12 @@
 import { useEffect, useRef, useState } from "react";
 import api from "../../api";
 import refresh from "../../assets/Icons/refresh-arrow.png";
-import CarnetDialog from "../RESPONSABLE/CarnetDialog";
+import CarnetDialog from "./CarnetDialog";
 
+import debut from "../../assets/Icons/debut.png";
+import fin from "../../assets/Icons/fin.png";
+import precedent from "../../assets/Icons/gauche_fleche.png";
+import suivant from "../../assets/Icons/droite_fleche.png";
 
 export default function HabitantsResponsable() {
   const [carnets, setCarnets] = useState([]);
@@ -10,6 +14,8 @@ export default function HabitantsResponsable() {
   const [professions, setProfessions] = useState([]);
   const [logements ,setLogements] = useState([]);
   const [nationalites , setNationalites] = useState([]);
+  const [page,setPage] = useState(1)
+  const [totalPage , setTotalPage] = useState(1)
 
   const [recherche, setRecherche] = useState("");
   const [secteur, setSecteur] = useState("");
@@ -19,6 +25,7 @@ export default function HabitantsResponsable() {
 
   const [carnetSelectionne, setCarnetSelectionne]= useState(null)
   const modalVoir = useRef(null);
+  const [dialogOuvert, setDialogOuvert] = useState(false);
 
 
   useEffect(() => {
@@ -34,19 +41,26 @@ export default function HabitantsResponsable() {
     const minuteur = setTimeout(() => { 
       setChargement(true);
       setErreur("");
-      api.get("/carnets/", { params: { q: recherche, secteur, profession } })
-        .then(({ data }) => setCarnets(data))
+      api.get("/carnets/", { params: { q: recherche, secteur, profession ,page} })
+        .then(({ data }) => {setCarnets(data.results);
+                              setTotalPage(data.total_pages)
+        })
         .catch(() => setErreur("Impossible de charger les carnets."))
         .finally(() => setChargement(false));
     }, 300);
     return () => clearTimeout(minuteur);
-  }, [recherche, secteur, profession]);
+  }, [recherche, secteur, profession,page]);
+
+  useEffect(()=>{
+    setPage(1);
+    },[recherche,secteur,profession])
     
     function réinitialiserFiltres(){
       setRecherche("");
       setSecteur("");
       setProfession("");
   }
+
 
 async function ouvrirDétailsCarnet(carnet) {
     try {
@@ -65,7 +79,8 @@ async function ouvrirDétailsCarnet(carnet) {
     <div className="habitant_resp">
       <div className="habitant_resp_container">
         <div className="habitant__resp__header">
- 
+         
+          
           <div className="habitant__resp__search">
             <div className="search_text">
                 <input id="refresh" type="text" placeholder="Recherche par nom, numéro de carnet" value={recherche} onChange={(e) => setRecherche(e.target.value)}/>
@@ -90,7 +105,20 @@ async function ouvrirDétailsCarnet(carnet) {
                     <option key={p.id} value={p.id}>{p.nom_Prof}</option>
                   ))}
                 </select>
+                
               </div>
+
+              <div className="nouveu__habitant">
+                <CarnetDialog 
+                  logements = {logements}
+                  professions ={professions}
+                  nationalites = {nationalites}
+                  onCreated={(nouveauCarnet)=>{
+                    setCarnets([nouveauCarnet,...carnets]);
+                  }}
+                />
+              </div>
+
             </div>
           </div>
         </div>
@@ -135,8 +163,10 @@ async function ouvrirDétailsCarnet(carnet) {
                 ))}
               </tbody>
             </table>
+            
           </div>
-         <div className="habitant__resp__right">
+          
+        {/* <div className="habitant__resp__right">
                 <CarnetDialog 
                   logements = {logements}
                   professions ={professions}
@@ -145,7 +175,27 @@ async function ouvrirDétailsCarnet(carnet) {
                     setCarnets([nouveauCarnet,...carnets]);
                   }}
                 />
-         </div>
+         </div> */}
+        <div className="res__resp__footer pagination__parent">
+                          
+            <div className="pagination__action">
+              <button disabled={page === 1} onClick={() => setPage(1)}>
+                <img src={debut} className="pagination_img"/>
+              </button>
+              <button disabled={page <= 1} onClick={() => setPage(prev => prev-1)}>
+                <img src={precedent} className="pagination_img2"/>
+              </button>
+              <span>Page {page} / {totalPage}</span>
+              <button disabled={page >= totalPage} onClick={() => setPage(prev => prev+1)}>
+                <img src={suivant} className="pagination_img2"/>
+              </button>
+              <button disabled={page === totalPage} onClick={() => setPage(totalPage)}>
+                <img src={fin} className="pagination_img"/>
+              </button>
+            </div>
+            
+            
+        </div>
         </div>
       </div>
 

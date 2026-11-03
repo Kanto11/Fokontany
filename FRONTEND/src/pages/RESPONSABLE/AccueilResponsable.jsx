@@ -28,6 +28,7 @@ export default function AccueilResponsable() {
           <div className="stats__carte"><strong>{stats.impayes}</strong> impayés ce mois</div>
           {/* <div className="stats__carte"><strong>{stats.residences}</strong> demandes de résidence</div> */}
           <div className="stats__carte"><strong>{stats.messages}</strong> messages non lus</div>
+          <p>En cours de chargement...</p>
         </div>
       )}
     </>

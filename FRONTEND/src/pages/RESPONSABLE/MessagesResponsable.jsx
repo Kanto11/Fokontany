@@ -1,6 +1,6 @@
 export default function   MessagesResponsable() {
      return(
-        <h1>Messages</h1>
+        <p>En cours....</p>
     );
 };
    

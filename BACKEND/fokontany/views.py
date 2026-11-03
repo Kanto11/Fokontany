@@ -1,12 +1,11 @@
+from django.db import transaction, IntegrityError
 import traceback
 from django.shortcuts import render
-from django.db import IntegrityError
-from django.db import transaction
 from rest_framework.response import Response
 from datetime import date
 from django.utils.dateparse import parse_date
 from decimal import Decimal
-from django.core.paginator import Paginator 
+from django.core.paginator import Paginator ,EmptyPage,PageNotAnInteger
 from django.http import HttpResponse
 
 from rest_framework.views import APIView;
@@ -78,6 +77,8 @@ class CarnetCreateView(APIView):
                    .order_by("-id"))
 
         q = request.query_params.get("q", "").strip()
+
+
         if q:
             filtre = (Q(pere__nom_P__icontains=q) | Q(pere__prenom_P__icontains=q)
                       | Q(mere__nom_P__icontains=q) | Q(mere__prenom_P__icontains=q))
@@ -93,8 +94,29 @@ class CarnetCreateView(APIView):
         if profession.isdigit():
             carnets = carnets.filter(Q(pere__profession_id=int(profession))
                                      | Q(mere__profession_id=int(profession)))
+        
+        elements_par_page = 4
+        paginator =Paginator(carnets,elements_par_page)
+        numero_page = request.query_params.get('page',1)
 
-        return Response(CarnetListSerializer(carnets, many=True).data)
+        try:
+            page_actuelle = paginator.page(numero_page)
+        except PageNotAnInteger:
+            page_actuelle = paginator.page(1)
+        except EmptyPage:
+            page_actuielle = paginator.page(paginator.num_pages)
+        serializer = CarnetListSerializer(page_actuelle.object_list,many=True)
+
+
+        return Response({
+            "count" : paginator.count,
+            "total_pages" : paginator.num_pages,
+            "current_page" : page_actuelle.number,
+            "has_next" : page_actuelle.has_next(),
+            "has_previous" : page_actuelle.has_previous(),
+            "results" : serializer.data
+
+        })
 
 class NationaliteListView(ListAPIView):
     permission_classes = [IsAuthenticated]
@@ -589,11 +611,7 @@ def _ligne_residence(r, request):
     }
 
 
-import traceback  # <-- N'oubliez pas d'ajouter cet import tout en haut du fichier
-from rest_framework.response import Response
-from rest_framework.views import APIView
-from django.core.exceptions import ValidationError as DjangoValidationError
-from django.db import transaction, IntegrityError
+
 
 class ResidenceBureauView(APIView):
     permission_classes = [EstResponsable]
@@ -605,7 +623,6 @@ class ResidenceBureauView(APIView):
         d = s.validated_data
         carnet = d["carnet"]
 
-        # Essayer d'exécuter toute la logique et attraper un éventuel crash caché
         try:
             quartier = carnet.logement.secteur.quartier
             if quartier.id != responsable.quartier_id:

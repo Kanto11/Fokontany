@@ -2,12 +2,21 @@ import { useEffect, useRef, useState } from "react";
 import api from "../../api";
 import ajouter from "../../assets/Icons/plus.png";
 
-const parentvide ={
-  nom_P : "" , prenom_P : "" ,date_nais_P : "" ,lieu_nais_P :"", nom_pere_P : "", nom_mere_P: "" , prof_P :"" ,tel_P : "",nationalite_P :"", proprietaire_P : false , email : "" , mot_de_passe :"" ,email_verif : "" , Cin_P : " ",date_delivrence_P : "" ,lieu_delivrence_P : "" , Passport :"" , date_expiration :""}
+const parentVide ={
+  nom_P : "" , prenom_P : "" ,date_nais_P : "" ,lieu_nais_P :"", nom_pere_P : "", nom_mere_P: "" , prof_P :"" ,tel_P : "",nationalite_P :"", proprietaire_P : false , email_P : "" , mdp_P :"" ,mdp_verif_P : "" , Cin_P : " ",date_delivrence_P : "" ,lieu_delivrence_P : "" , Passport :"" , date_expiration :""}
+
+const enfantVide = {
+  nom_Ef: "", prenom_Ef: "", date_nais_Ef: "", lieu_nais_Ef: "",
+  nationalite_Ef: "", profession_Ef: "",
+};
+
 export default function CarnetDialog({}) {
   const dialogRef = useRef(null);     
   const ouvrir = () => dialogRef.current.showModal();
-  const fermer = () => dialogRef.current.close();
+  const fermer = () => {dialogRef.current.close()
+
+                        parentvide("")
+  };
 
   //--------------------log-declaration------------------------
   const dialogLog = useRef(null);
@@ -51,10 +60,14 @@ export default function CarnetDialog({}) {
   const [adresseH, setAdresseH] = useState("");
   const [logementId , setLogementId] = useState("");
   const [erreurLog ,setErreurLog] = useState("");
-  const [pere , setPere] = useState(parentvide);
-  const [mere , setMere] = useState(parentvide);
+  const [pere , setPere] = useState(parentVide);
+  const [mere , setMere] = useState(parentVide);
   const [leserreursHab , setLeserreursHab] = useState({})
   const [erreurLogHab,setErreurLogHab] = useState("");
+  const [enfants, setEnfants] = useState([]);
+  const [erreurs, setErreurs] = useState(null);
+
+
   function changerAdresse(e){
     const valeur = e.target.value;
     setAdresseH(valeur);
@@ -154,17 +167,16 @@ export default function CarnetDialog({}) {
         lesErreurs_locales.pere_date_nais = "Age du parent devrait etre entre 15-110 ans "
       }
       if (!verifieAge(mere.date_nais_P)) {
-      lesErreurs_locales.mere_date_nais = "Age du parent devrait etre entre 15-110 ans";
+        lesErreurs_locales.mere_date_nais = "Age du parent devrait etre entre 15-110 ans";
       }
 
     //------------champ nom
-        if (!mere.nom_P)
+        if (!mere.nom_P){
             lesErreurs_locales.mere_nom_p = "Le nom  est obligatoire "
-
-        if (!pere.nom_P)
+        }
+        if (!pere.nom_P){
             lesErreurs_locales.pere_nom_p = "Le nom  est obligatoire "
-
-
+        }
 
         // -----------champs tel
         if (!mere.tel_P || mere.tel_P.length > 10 || mere.tel_P.length < 10){
@@ -233,6 +245,7 @@ export default function CarnetDialog({}) {
                 lesErreurs_locales.pere_date_exp = "La date d'expiration doit être dans le futur";
               }
             }
+          }
                 //---mere------
 
             if (!mere.nationalite_P) {
@@ -256,9 +269,8 @@ export default function CarnetDialog({}) {
                     lesErreurs_locales.mere_lieu_cin = "Le lieu de délivrance est obligatoire";
                   }
                 }
-            }
 
-              if (String(mere.nationalite_P) === "2") {
+                if (String(mere.nationalite_P) === "2") {
                     const passportRegex = /^[A-Za-z0-9]{5,9}$/;
                     if (!mere.Passport || !mere.Passport.trim()) {
                       lesErreurs_locales.mere_passport = "Le numéro de passeport est obligatoire";
@@ -271,17 +283,109 @@ export default function CarnetDialog({}) {
                     } else if (mere.date_expiration <= aujourdhuiStr) {
                       lesErreurs_locales.mere_date_exp = "La date d'expiration doit être dans le futur";
                     }
-            }
+                }
       
+            }
+
+          //--------profession
+              
+            if (!pere.prof_P){
+              lesErreurs_locales.pere_prof_p = "Profession obligatoire";
+
+            }
+            if (!mere.prof_P){
+              lesErreurs_locales.mere_prof_p = "Profession obligatoire";
+
+            }
+
+          //email
+          const emailRegex = /^[^\s@]+@[^\s@]+.[^\s@]+$/
+
+          if (!pere.email_P || !pere.email_P.trim()){
+            lesErreurs_locales.pere_email_P = "Email obligatoire";
+          }else if(!emailRegex.test(pere.email_P)){
+            lesErreurs_locales.pere_email_P = "Email invalide (exemple@gmail.com)";
+          }
+          if (!mere.email_P){
+            lesErreurs_locales.mere_email_P = "Email obligatoire";
+          }else if(!emailRegex.test(pere.email_P)){
+            lesErreurs_locales.mere_email_P = "Email invalide (exemple@gmail.com)";
+          }
+
+          //mot de psse 
+          if(!pere.mdp_P){
+            lesErreurs_locales.pere_mdp_P="mot de passe obligatoire"
+          }
+
+          if (!mere.email_P){
+            lesErreurs_locales.mere_mdp_P="mot de passe obligatoire"
+          }
+
+          //verif
+           if(!pere.mdp_verif_P){
+            lesErreurs_locales.pere_mdp_verif_P="Confirmation obligatoire"
+          }else if(String(pere.mdp_verif_P) !== String(pere.mdp_P)){
+              lesErreurs_locales.pere_mdp_verif_P="Les mots de passe ne correspond pas  "
+          }
+
+          if(!mere.mdp_verif_P){
+            lesErreurs_locales.mere_mdp_verif_P="Confirmation obligatoire"
+          }else if(String(mere.mdp_verif_P) !== String(mere.mdp_P)){
+              lesErreurs_locales.mere_mdp_verif_P="Les mots de passe ne correspond pas  "
+          }
 
       if (Object.keys(lesErreurs_locales).length > 0) {
-      setLeserreursHab(lesErreurs_locales);
-      return; 
+        setLeserreursHab(lesErreurs_locales);
+        return; 
       }
    }
 
+   //enfants
+  const ajouterEnfant = () => setEnfants([...enfants, { ...enfantVide }]);
+  const changerEnfant = (i, champ, valeur) =>
+    setEnfants(enfants.map((e, idx) => (idx === i ? { ...e, [champ]: valeur } : e)));
+  const retirerEnfant = (i) => setEnfants(enfants.filter((_, idx) => idx !== i));
 
-  return (
+   const nettoyerParent = (p) => {
+    if (!p.nom_P.trim()) return undefined;        
+    const copie = { ...p };
+    if (!copie.email || !copie.mot_de_passe) {    
+      delete copie.email;
+      delete copie.mot_de_passe;
+    }
+    return copie;
+  };
+  const envoyer = async (e) => {
+    e.preventDefault();
+    setErreurs(null);
+
+    const payload = {
+      logement: Number(logement),
+      pere: nettoyerParent(pere),
+      mere: nettoyerParent(mere),
+      enfants: enfants.map((en) => ({ ...en, profession: en.profession || null })),
+    };
+
+    const rep = await fetch("http://127.0.0.1:8000/api/carnets/", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${localStorage.getItem("token")}`, // adapte à ton auth
+      },
+      body: JSON.stringify(payload),
+    });
+
+    if (rep.ok) {
+        const data = await rep.json();     
+        fermer();
+        setLogement(""); setPere(parentVide); setMere(parentVide); setEnfants([]);
+        onCreated?.(data);           
+
+    } else {
+      setErreurs(await rep.json());  
+    }
+  };
+  return(
     <>
       <button onClick={ouvrir}>+ Nouveau carnet</button>
 
@@ -317,19 +421,47 @@ export default function CarnetDialog({}) {
               onChange={setPere}  erreurAge={leserreursHab.pere_date_nais} erreurTel = {leserreursHab.pere_tel_p}
               erreurNom = {leserreursHab.pere_nom_p} erreurLieuNais = {leserreursHab.pere_lieu_nais_p}
               erreurNationalite={leserreursHab.pere_nationalite_p}
-              erreurCin={leserreursHab.pere_cin} erreurDateCin={leserreursHab.pere_date_cin} erreurLieuCin={leserreursHab.pere_lieu_cin} erreurPassport={leserreursHab.pere_passport} erreurDateExp={leserreursHab.pere_date_exp}
+              erreurCin={leserreursHab.pere_cin} erreurDateCin={leserreursHab.pere_date_cin} erreurLieuCin={leserreursHab.pere_lieu_cin} erreurPassport={leserreursHab.pere_passport} erreurDateExp={leserreursHab.pere_date_exp} erreurProf={leserreursHab.pere_prof_p}
+              erreurEmail={leserreursHab.pere_email_P} erreurMdp={leserreursHab.pere_mdp_P} erreurMdpVerif={leserreursHab.pere_mdp_verif_P}
              />
               <ParentFields titre="Mère" professions= {professions} nationalites={nationalites} valeur={mere} 
               onChange={setMere} erreurAge={leserreursHab.mere_date_nais} erreurTel = {leserreursHab.mere_tel_p}
               erreurNom = {leserreursHab.mere_nom_p} erreurLieuNais = {leserreursHab.mere_lieu_nais_p}
               erreurNationalite={leserreursHab.mere_nationalite_p}
-              erreurCin={leserreursHab.mere_cin} erreurDateCin={leserreursHab.mere_date_cin} erreurLieuCin={leserreursHab.mere_lieu_cin} erreurPassport={leserreursHab.mere_passport} erreurDateExp={leserreursHab.mere_date_exp}/>
+              erreurCin={leserreursHab.mere_cin} erreurDateCin={leserreursHab.mere_date_cin} erreurLieuCin={leserreursHab.mere_lieu_cin} erreurPassport={leserreursHab.mere_passport} erreurDateExp={leserreursHab.mere_date_exp} erreurProf={leserreursHab.pere_prof_p}
+              erreurEmail={leserreursHab.mere_email_P} erreurMdp={leserreursHab.mere_mdp_P} erreurMdpVerif={leserreursHab.mere_mdp_verif_P}/> 
+          </div>
+
+          <div className="enfants">
+            <h3>Enfant</h3>
+              {enfants.map((en, i) => (
+              <fieldset key={i}>
+                <legend>Enfant {i + 1}</legend>
+                <input placeholder="Nom" value={en.nom_Ef}
+                  onChange={(e) => changerEnfant(i, "nom_Ef", e.target.value)} required />
+                <input placeholder="Prénom" value={en.prenom_Ef}
+                  onChange={(e) => changerEnfant(i, "prenom_Ef", e.target.value)} required />
+                <input type="date" value={en.date_nais_Ef}
+                  onChange={(e) => changerEnfant(i, "date_nais_Ef", e.target.value)} required />
+                <input placeholder="Lieu de naissance" value={en.lieu_nais_Ef}
+                  onChange={(e) => changerEnfant(i, "lieu_nais_Ef", e.target.value)} required />
+                <select value={en.nationalite}
+                  onChange={(e) => changerEnfant(i, "nationalite", e.target.value)} required>
+                  <option value="">Nationalité</option>
+                  {nationalites.map((n) => <option key={n.id} value={n.id}>{n.nom_N ?? n.id}</option>)}
+                </select>
+                <button type="button" onClick={() => retirerEnfant(i)}>Retirer</button>
+              </fieldset>
+            ))}
+            <button type="button" onClick={ajouterEnfant}>+ Ajouter un enfant</button>
+
+            {erreurs && <pre style={{ color: "red" }}>{JSON.stringify(erreurs, null, 2)}</pre>}
           </div>
 
 
           <div className="btn__carnetDialog btn__action">
               <button className="btn__valider" type="submit">Valider</button>
-              <button  className="btn__annuler">Annuler</button>
+              <button onClick={fermer} className="btn__annuler">Annuler</button>
           </div>
         </form>
       </dialog>
@@ -373,12 +505,10 @@ export default function CarnetDialog({}) {
   );
 }
 
-
-
 //----pere et mere----
 function ParentFields({ titre, professions = [], nationalites = [], valeur, onChange ,erreurAge , 
   erreurTel ,erreurNom ,erreurLieuNais ,erreurNationalite ,
-  erreurCin, erreurDateCin, erreurLieuCin, erreurPassport, erreurDateExp}) {
+  erreurCin, erreurDateCin, erreurLieuCin, erreurPassport, erreurDateExp,erreurProf,erreurMdp,erreurMdpVerif,erreurEmail}) {
 
   if (!valeur) return null; 
 
@@ -409,6 +539,9 @@ function ParentFields({ titre, professions = [], nationalites = [], valeur, onCh
 
       <label htmlFor="">Nom de la mère</label>
       <input type="text" value={valeur.nom_mere_P || ""} onChange={(e) => set("nom_mere_P", e.target.value)} />
+
+      <label htmlFor="">Photo</label>
+      <input type="file" name="" id="" />
 
       <label htmlFor="">Téléphone : (10 Chiffres)</label>
       <input type="text"  value={valeur.tel_P || ""} onChange={(e) => set("tel_P", e.target.value)} />
@@ -478,19 +611,21 @@ function ParentFields({ titre, professions = [], nationalites = [], valeur, onCh
                 <option key={p.id} value={p.id}>{p.nom_Prof ?? p.id}</option>
               ))}
             </select>
+            {erreurProf && <p style={{ color: "red" }}>{erreurProf}</p>}
           </div>
 
           <div className="parent__compte">
             <label htmlFor="">Email :</label>
             <input type="text" value={valeur.email_P || ""} onChange={(e) => set("email_P", e.target.value)} />
-
+            {erreurEmail && <p style={{ color: "red" }}>{erreurEmail}</p>}
             <label htmlFor="">Mot de passe</label>
-            <input type="password" value={valeur.password_P || ""} onChange={(e) => set("password_P", e.target.value)} />
-
+            <input type="password" value={valeur.mdp || ""} onChange={(e) => set("mdp", e.target.value)} />
+            {erreurMdp && <p style={{ color: "red" }}>{erreurMdp}</p>}
             <label htmlFor="">Confirmation mot de passe</label>
-            <input type="password" value={valeur.password_conf_P || ""} onChange={(e) => set("password_conf_P", e.target.value)} />
+            <input type="password" value={valeur.mdp_verif_P || ""} onChange={(e) => set("mdp_verif_P", e.target.value)} />
+            {erreurMdpVerif && <p style={{ color: "red" }}>{erreurMdpVerif}</p>}
           </div>
       </fieldset>
   );
 }
-}
+
