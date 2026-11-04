@@ -49,4 +49,7 @@ urlpatterns = [
     path("api/publications/",PublicationView.as_view()),
     path("api/publications/<int:pk>/",PublicationDetailView.as_view()),
     path("api/publications/habitant/", PublicationsHabitantView.as_view()),
+
+    path("api/dashboard/responsable/",DashboardResponsableView.as_view()),
+
 ]+ static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)

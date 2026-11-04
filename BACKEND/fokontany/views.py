@@ -816,3 +816,70 @@ class PublicationsHabitantView(APIView):
             "pagination": {"page": page.number, "pages": paginator.num_pages,
                            "total": paginator.count},
         })
+
+
+
+class DashboardResponsableView(APIView):
+    permission_classes = [EstResponsable]
+
+    def get(self,request):
+        quartier = quartier_de(request.user)
+        aujourdhui = date.today()
+        tarifs = tarifs_cotisations(quartier)
+
+        carnets = (Carnet.objects.filter(logement__secteur__quartier=quartier).select_related("pere" , "mere").prefetch_related("cotisations"))
+
+        en_retard = []
+        for c in carnets:
+            impayes , _ = situation_carnet(c,tarifs,aujourdhui)
+            if impayes:
+                chef = c.pere or c.mere
+                en_retard.append({
+                    "carnet_id" : c.id,
+                    "chef" : f"{chef.nom_P} {chef.prenom_P}" if chef else "_",
+                    "nb_impayes" : len(impayes),
+                    "montant_du" :sum(i["prix"] for i in impayes),
+                })
+        en_retard.sort(key=lambda l:l["nb_impayes"],reverse=True)
+        nb_familles = len(carnets)
+
+        #encaissements des 6 derniers mois
+        mois_liste = []
+        a,m = aujourdhui.year,aujourdhui.month
+        for _ in range(6):
+            mois_liste.append((a,m))
+            m -= 1
+            if m == 0:
+                a,m = a-1,12
+        mois_liste.reverse()
+
+        graphique = []
+        for a,m in mois_liste:
+            somme = (Paiement.objects.filter(carnet__logement__secteur__quartier= quartier,
+                    status_Pay = "VALIDE",
+                    tarif__nom_Tf="Cotisations par mois",
+                    date_Pay__year =a,
+                    date_Pay__month=m).aggregate(t=Sum("montant"))["t"] or 0)
+            graphique.append({"annee":a, "mois" : m,"total":float(somme)})
+
+        #--residences 
+        residences = Residence.objects.filter(carnet__logement__secteur__quartier=quartier)
+        a_traiter = (residences.filter(status="EN_ATTENTE").select_related("carnet__logement__secteur","carnet__pere" , "carnet__mere","parent_concerne" , "enfant_concerne","paiement").order_by("-id"))
+
+        #--pub
+        publications = (Publication.objects.filter(quartier =  quartier).order_by("-date_Pub")[:3])
+
+        return Response({
+            "compteurs" :{
+                "familles" : nb_familles,
+                "en_retard" :  len(en_retard),
+                "encaisse_mois": graphique[-1]["total"],
+                "residences_a_traiter" : a_traiter.count(),
+                "residences_payer" : residences.filter(status="A_PAYER").count(),
+
+            },
+            "graphique" : graphique,
+            "familles_en_retard" : en_retard,
+            "residences" : [_ligne_residence(r,request) for r in a_traiter[:3]],
+            "publications" : [{"id": p.id ,"texte":p.texte_Pub,"date" : p.date_Pub} for p in publications],
+        })
