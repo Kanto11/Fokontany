@@ -1,5 +1,12 @@
 @use '../abstract' as * ;
-
+.wrapper__resp{
+    width: 90%;
+    margin: auto;
+}
+.dashboard{
+    box-sizing: border-box;
+    min-height: 100vh;
+}
 .dashboard__compteurs{
     padding-top: 2rem;
     @include dflex();
@@ -38,4 +45,57 @@
         color: $placeholder-color;
         font-size: 0.8rem;
     }
+}
+
+.dashboard__body{
+    display: flex;
+    padding: 2rem 0;
+    gap: 4rem;
+    margin-bottom: 2rem;
+
+    
+}
+.dashboard__left{
+    width: 40%;
+    background-color: $bg-gris
+}
+.dashboard__center{
+    width: 30%;
+
+}
+.dashboard__right{
+    width: 30%;
+    background-color: $color-blanc;
+}
+.dash__left1{
+    display: flex;
+    gap: 2rem;
+    margin-top: 2rem;
+    color: $color-bleu;
+}
+.graphique{
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+.grapique_txt{
+    height: 120px;
+    display: flex;
+    align-items: flex-end;
+    width: 100%;
+}
+.grapique_card{
+    border-radius: 1rem;
+    padding: 1rem;
+    h3{
+        color: $color-bleu;
+        font-family: $font-logos;
+    }
+    span{
+        
+        font-size: 0.8rem;
+    }
+}
+.graphique__bare{
+    background-color: $border-color;
 }

@@ -2,7 +2,13 @@ import { useEffect,useState } from "react";
 import { Link } from "react-router-dom";
 import api from "../../api";
 import retard from "../../assets/Icons/warning.png";
+
+const MOIS_COURT = ["janv." ,"fev." , "mars" ,"avr." ,"mai" ,"juin" , "juil." ,"aout" ,"sept." ,"oct." ,"nov." ,"dec."]
+
 const nomMois = new Date().toLocaleString('fr-FR',{month : 'long'})
+
+const ar = (n) => `${Number(n).toLocaleString("fr-FR")} `;
+
 export default function AccueilResponsable(){
   const [resultats,setResultats] = useState(null)
   const [erreur, setErreur] = useState("")
@@ -16,6 +22,7 @@ export default function AccueilResponsable(){
     },[])
 
     if (!resultats) return<p>Chargement...</p>
+    const max = Math.max(...resultats.graphique.map((g)=>g.total),1)
   return(
     <>
       <div className="dashboard">
@@ -58,6 +65,33 @@ export default function AccueilResponsable(){
                   </div>
                     
                 </div>
+            </div>
+            <div className="dashboard__body">
+              <div className="dashboard__left grapique_card">
+                <h3>Cotisations encaissées</h3>
+                <span style={{color:"#94a3b8"}}>(6 derniers mois)</span>
+                <div className="dash__left1 grapique_card">
+                  {resultats.graphique.map((g) => (
+                      <div key={`${g.annee}-${g.mois}`} className="graphique">
+                          <span>{g.total ? ar(g.total) : "—"}</span>
+                          <div className="grapique_txt">
+                              <div
+                       style={{ width: "100%", height: `${(g.total / max) * 100}%`, minHeight: 2 }} className="graphique__bare" />
+                          </div>
+                          
+                          <div><span className="text-xs mt-1">{MOIS_COURT[g.mois - 1]}</span></div>
+                    </div>
+                    
+                  ))}
+                </div>
+              </div>
+              <div className="dashboard__center grapique_card">
+                <p>center</p>
+              </div>
+              <div className="dashboard__right grapique_card">
+                <p>pub</p>
+              </div>
+
             </div>
           </div>
         </div>
