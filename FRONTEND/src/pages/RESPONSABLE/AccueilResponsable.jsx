@@ -86,10 +86,25 @@ export default function AccueilResponsable(){
                 </div>
               </div>
               <div className="dashboard__center grapique_card">
-                <p>center</p>
+                <h3>Familles les plus en retard</h3>
+                {resultats.familles_en_retard.length === 0 ? (
+                  <p style={{color:"#44ef6f"}}>Toutes les familles sont a jour</p>
+                ):(
+                  <ul>
+                      {resultats.familles_en_retard.map((f) =>(
+                        <li key={f.carnet_id}>
+                          <div>-{f.chef}</div>
+                          <div>--{f.nb_impayes} mois</div>
+                          <div> -- {ar(f.montant_du)}Ar</div>
+                        </li>
+                      ))}
+                  </ul>
+                )}
+                <Link to="/responsable/cotisations" className="Voir__cotisations">Voir tout</Link>
               </div>
               <div className="dashboard__right grapique_card">
-                <p>pub</p>
+                <h3>Résidences à traiter</h3>
+                
               </div>
 
             </div>

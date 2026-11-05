@@ -880,6 +880,4 @@ class DashboardResponsableView(APIView):
             },
             "graphique" : graphique,
             "familles_en_retard" : en_retard,
-            "residences" : [_ligne_residence(r,request) for r in a_traiter[:3]],
-            "publications" : [{"id": p.id ,"texte":p.texte_Pub,"date" : p.date_Pub} for p in publications],
         })

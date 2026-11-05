@@ -61,11 +61,38 @@
 }
 .dashboard__center{
     width: 30%;
+    background-color: $color-blanc;
+    color: $color-gris;
+    position: relative;
+    ul{
+        padding-top: 1rem;
+    }
+    li{
+        display: flex;
+        justify-content: space-between;
+        div{
+            padding-bottom: 1rem;
+        }
+    }
+    .Voir__cotisations{
+        color: $color-gris;
+        position: absolute;
+        bottom: 10px;
+        right: 15px;
+        background-color: $bg-gris;
+        border-bottom: 2px $color-jaune solid;
+    }
 
 }
 .dashboard__right{
     width: 30%;
     background-color: $color-blanc;
+}
+
+.dashboard__right , .dashboard__center{
+    h3{
+        border-bottom: 1px solid $placeholder-color;
+    }
 }
 .dash__left1{
     display: flex;
@@ -89,7 +116,9 @@
     padding: 1rem;
     h3{
         color: $color-bleu;
-        font-family: $font-logos;
+        font-family: $font-link;
+        font-size: 0.8rem;
+        
     }
     span{
         
