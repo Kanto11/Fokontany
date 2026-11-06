@@ -49,6 +49,16 @@ button{
     background-color: rgba(206, 96, 96, 0.795);
     color :$color-blanc
 }
+.btn__fermer{
+    padding: 5px;
+    img{
+        width: 1rem;
+        height: 1rem;
+    }
+    &:hover{
+        background-color: $bg-gris;
+    }
+}
 
 @include respond("md"){
     button {

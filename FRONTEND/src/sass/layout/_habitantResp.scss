@@ -53,6 +53,12 @@
 //formulaire
 
 .carnetDialog{
+    position: relative;
+    .btn__fermer{
+        position: absolute;
+        top: 0;
+        right: 5px;
+    }
     input{
         margin-bottom: 1rem;
     }
@@ -62,4 +68,9 @@
     margin: 1rem 0;
   }
     
+}
+.ajouter__enfant{
+    border-bottom: 1px solid $color-bleu;
+    color:$color-bleu;
+    border-radius: 0;
 }

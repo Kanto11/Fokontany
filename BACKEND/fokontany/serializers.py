@@ -1,8 +1,11 @@
+import re
+from datetime import date
+
 from django.core.exceptions import ValidationError as DjangoValidationError
 from rest_framework import serializers 
 from django.db import transaction
 from .models import (
-    Secteur ,Responsable ,Carnet, Enfant, Logement, Parent, PieceIdentite, Type, User,Profession,Quartier,Nationalite,Message ,Publication ,Residence
+    Type,Secteur ,Responsable ,Carnet, Enfant, Logement, Parent, PieceIdentite, Type, User,Profession,Quartier,Nationalite,Message ,Publication ,Residence
 )
 
 
@@ -60,6 +63,8 @@ class ParentInSerializer(serializers.ModelSerializer):
     email = serializers.EmailField(required=False , write_only=True)
     mot_de_passe = serializers.CharField(required=False ,write_only=True, min_length =8)
     nationalite = serializers.PrimaryKeyRelatedField(queryset=Nationalite.objects.all())
+    nom_pere_P = serializers.CharField(allow_blank=True)
+    nom_mere_P = serializers.CharField(allow_blank=True)
     class Meta:
         model = Parent
         fields = ['nom_P','prenom_P','date_nais_P','lieu_nais_P','nom_pere_P','nom_mere_P',
@@ -77,8 +82,9 @@ class ParentInSerializer(serializers.ModelSerializer):
 
    
 
-    def validate (self,data):
-        email ,  mdp =  data.get(self.email) , data.get(self.mot_de_passe)
+    def validate(self, data):
+        email = data.get("email")
+        mdp = data.get("mot_de_passe")
 
         if bool(email) != bool(mdp) :
             raise serializers.ValidationError("email et mot de passe vont ensemble")
@@ -91,6 +97,8 @@ class ParentInSerializer(serializers.ModelSerializer):
                 raise serializers.ValidationError({
                     "date_nais_P": "La date de naissance ne peut pas être dans le futur."
                 })
+
+        return data
 
 class EnfantDetailSerializer(serializers.ModelSerializer):
     nationalite = NationaliteSerializer(read_only=True)
@@ -136,14 +144,15 @@ class CarnetCreateSerializer(serializers.Serializer):
         piece_data = data.pop("piece", None)
         email = data.pop("email", None)
         mot_de_passe = data.pop("mot_de_passe", None)
-
+        type_habitant,_=Type.objects.get_or_create(nom_T="HABITANT")
         user = None
 
         if email and mot_de_passe:         
             user = User.objects.create_user(
-                username=email,
+                
                 email=email,
                 password=mot_de_passe,
+                type=type_habitant,
             )
 
         parent = Parent.objects.create(user=user, **data)

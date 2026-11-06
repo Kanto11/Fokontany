@@ -1,22 +1,30 @@
 import { useEffect, useRef, useState } from "react";
 import api from "../../api";
 import ajouter from "../../assets/Icons/plus.png";
-
+import fermerImg from "../../assets/Icons/cross.png";
 const parentVide ={
   nom_P : "" , prenom_P : "" ,date_nais_P : "" ,lieu_nais_P :"", nom_pere_P : "", nom_mere_P: "" , prof_P :"" ,tel_P : "",nationalite_P :"", proprietaire_P : false , email_P : "" , mdp_P :"" ,mdp_verif_P : "" , Cin_P : " ",date_delivrence_P : "" ,lieu_delivrence_P : "" , Passport :"" , date_expiration :""}
 
 const enfantVide = {
   nom_Ef: "", prenom_Ef: "", date_nais_Ef: "", lieu_nais_Ef: "",
-  nationalite_Ef: "", profession_Ef: "",
+  nationalite: "", profession: "",
 };
 
-export default function CarnetDialog({}) {
+export default function CarnetDialog({ onCreated }) {
   const dialogRef = useRef(null);     
   const ouvrir = () => dialogRef.current.showModal();
-  const fermer = () => {dialogRef.current.close()
+  const fermer = () => {
+  if (dialogRef.current) {
+    dialogRef.current.close();
+    }
+  
+    setPere({ ...parentVide });
+    setMere({ ...parentVide });
+    setAdresseH("");
+    setEnfants([]);
+    setLeserreursHab({});
+};
 
-                        parentvide("")
-  };
 
   //--------------------log-declaration------------------------
   const dialogLog = useRef(null);
@@ -66,7 +74,7 @@ export default function CarnetDialog({}) {
   const [erreurLogHab,setErreurLogHab] = useState("");
   const [enfants, setEnfants] = useState([]);
   const [erreurs, setErreurs] = useState(null);
-
+  const [erreursChef, setErreursChef] = useState("");
 
   function changerAdresse(e){
     const valeur = e.target.value;
@@ -103,8 +111,8 @@ export default function CarnetDialog({}) {
     e.preventDefault()
     setErreursLog({});
      let lesErreurs = {}
-    if (!adresse.trim()){
-      lesErreurs.adresse = "L'adresse est obligatoire";
+    if (!adresseH.trim()){
+      lesErreurs.adresseH = "L'adresse est obligatoire";
     }
     if (!hauteur || (hauteur < 1)  ){
       lesErreurs.hauteur = "L'hauteur est obligatoire et devrais etre positif";
@@ -151,64 +159,81 @@ export default function CarnetDialog({}) {
       }
       return age >= 15 && age <= 110;
     }
+
+  const ajouterEnfant = () => setEnfants([...enfants, { ...enfantVide }]);
+  const changerEnfant = (i, champ, valeur) =>
+    setEnfants(enfants.map((e, idx) => (idx === i ? { ...e, [champ]: valeur } : e)));
+  const retirerEnfant = (i) => setEnfants(enfants.filter((_, idx) => idx !== i));
+  const nettoyerParent = (p) => {
+    if (!p?.nom_P?.trim()) return null;
+
+    const nationalite = Number(p.nationalite_P);
+    const parent = {
+      nom_P: p.nom_P.trim(),
+      prenom_P: p.prenom_P,
+      date_nais_P: p.date_nais_P,
+      lieu_nais_P: p.lieu_nais_P,
+      nom_pere_P: p.nom_pere_P,
+      nom_mere_P: p.nom_mere_P,
+      tel_P: p.tel_P,
+      proprietaire_P: Boolean(p.est_proprietaire),
+      profession: Number(p.profession_id),
+      nationalite,
+    };
+
+    if (p.email_P && p.mdp_P) {
+      parent.email = p.email_P.trim();
+      parent.mot_de_passe = p.mdp_P;
+    }
+
+    if (nationalite === 1 || nationalite === 2) {
+      parent.piece = {
+        type_piece: nationalite === 1 ? "CIN" : "PASSPORT",
+        numero: nationalite === 1 ? p.Cin_P.trim() : p.Passport.trim(),
+        date_delivrance: p.date_delivrence_P || null,
+        lieu_delivrance: p.lieu_delivrence_P?.trim() || "",
+        date_expiration: nationalite === 2 ? p.date_expiration || null : null,
+      };
+    }
+
+    return parent;
+  };
+
    const btnvalideHabitant = async(e) => {
       e.preventDefault()
       setLeserreursHab({});
+      setErreurs(null);
+      setErreurLogHab("");
+
+      if (!logementId) {
+        setErreurLogHab("Veuillez lier un logement valide.");
+        return;
+      }
+
       let lesErreurs_locales = {};
       const aujourdhuiStr = new Date().toISOString().split("T")[0];
-      //--------champs log
-      if (!logementId) {
-        setErreurLogHab("Veuillez lier un logement valide.") ;
-        
-      }
-
-      //-------date naiss
-      if (!verifieAge(pere.date_nais_P)){
-        lesErreurs_locales.pere_date_nais = "Age du parent devrait etre entre 15-110 ans "
-      }
-      if (!verifieAge(mere.date_nais_P)) {
-        lesErreurs_locales.mere_date_nais = "Age du parent devrait etre entre 15-110 ans";
-      }
+      const emailRegex = /^[^\s@]+@[^\s@]+.[^\s@]+$/
 
     //------------champ nom
-        if (!mere.nom_P){
-            lesErreurs_locales.mere_nom_p = "Le nom  est obligatoire "
-        }
-        if (!pere.nom_P){
-            lesErreurs_locales.pere_nom_p = "Le nom  est obligatoire "
-        }
+    if ((!mere?.nom_P) && (!pere?.nom_P)){
+      setErreursChef("Chef de famille obligatoire");
+      lesErreurs_locales.mere_nom_p = "Le nom  est obligatoire ";
+      lesErreurs_locales.pere_nom_p = "Le nom  est obligatoire "
+    } 
 
-        // -----------champs tel
-        if (!mere.tel_P || mere.tel_P.length > 10 || mere.tel_P.length < 10){
-          lesErreurs_locales.mere_tel_p = "Telephone est obligatoire et avec 10 chiffres"
+      //-----------pere
+      if(pere?.nom_P){
+        if (!verifieAge(pere.date_nais_P)){
+        lesErreurs_locales.pere_date_nais = "Age du parent devrait etre entre 15-110 ans "
         }
         if (!pere.tel_P || pere.tel_P.length > 10 || pere.tel_P.length < 10){
           lesErreurs_locales.pere_tel_p = "Telepehone est obligatoire et avec 10 chiffres"
         }
-
-        //-----------champ nom
-          if (!mere.nom_P) {
-            lesErreurs_locales.mere_nom_p = "Nom est obligatoire"
-            
-          }
-
-          if (!pere.nom_P) {
-            lesErreurs_locales.pere_nom_p = "Nom est obligatoire"
-            
-          }
-
-          //-----------lieu naiss
-
-          if (!mere.lieu_nais_P){
-            lesErreurs_locales.mere_lieu_nais_p = "Lieu de naissance obligatoire"
-          }
-          if (!pere.lieu_nais_P){
+        if (!pere.lieu_nais_P){
             lesErreurs_locales.pere_lieu_nais_p = "Lieu de naissance obligatoire"
           }
-        
-          //-----------nationalite
-                //----pere-----
-          if (!pere.nationalite_P) { 
+
+        if (!pere.nationalite_P) { 
             lesErreurs_locales.pere_nationalite_p = "La nationalité du père est obligatoire";
           }else{
         
@@ -246,9 +271,45 @@ export default function CarnetDialog({}) {
               }
             }
           }
-                //---mere------
 
-            if (!mere.nationalite_P) {
+        if (!pere.profession_id){
+              lesErreurs_locales.pere_prof_P = "Profession obligatoire";
+
+            }
+        if (!pere.email_P || !pere.email_P.trim()){
+            lesErreurs_locales.pere_email_P = "Email obligatoire";
+          }else if(!emailRegex.test(pere.email_P)){
+            lesErreurs_locales.pere_email_P = "Email invalide (exemple@gmail.com)";
+          }
+
+        if(!pere.mdp_P){
+            lesErreurs_locales.pere_mdp_P="mot de passe obligatoire"
+          } else if (pere.mdp_P.length < 8) {
+            lesErreurs_locales.pere_mdp_P="Le mot de passe doit contenir au moins 8 caractères"
+          }
+
+        if(!pere.mdp_verif_P){
+            lesErreurs_locales.pere_mdp_verif_P="Confirmation obligatoire"
+          }else if(String(pere.mdp_verif_P) !== String(pere.mdp_P)){
+              lesErreurs_locales.pere_mdp_verif_P="Les mots de passe ne correspond pas  "
+              console.log(pere.mdp_P)
+          }
+      }
+
+      //----------mere
+      if(mere?.nom_P){
+        if (!verifieAge(mere.date_nais_P)) {
+        lesErreurs_locales.mere_date_nais = "Age du parent devrait etre entre 15-110 ans";
+        }
+
+        if (!mere.tel_P || mere.tel_P.length > 10 || mere.tel_P.length < 10){
+          lesErreurs_locales.mere_tel_p = "Telephone est obligatoire et avec 10 chiffres"
+        }
+        if (!mere.lieu_nais_P){
+            lesErreurs_locales.mere_lieu_nais_p = "Lieu de naissance obligatoire"
+        }
+
+        if (!mere.nationalite_P) {
               lesErreurs_locales.mere_nationalite_p = "La nationalité de la mère est obligatoire";
             }else {
                 if (String(mere.nationalite_P) === "1") {
@@ -287,112 +348,87 @@ export default function CarnetDialog({}) {
       
             }
 
-          //--------profession
-              
-            if (!pere.prof_P){
-              lesErreurs_locales.pere_prof_p = "Profession obligatoire";
-
-            }
-            if (!mere.prof_P){
+        if (!mere.profession_id){
               lesErreurs_locales.mere_prof_p = "Profession obligatoire";
 
             }
 
-          //email
-          const emailRegex = /^[^\s@]+@[^\s@]+.[^\s@]+$/
-
-          if (!pere.email_P || !pere.email_P.trim()){
-            lesErreurs_locales.pere_email_P = "Email obligatoire";
-          }else if(!emailRegex.test(pere.email_P)){
-            lesErreurs_locales.pere_email_P = "Email invalide (exemple@gmail.com)";
-          }
-          if (!mere.email_P){
+        if (!mere.email_P){
             lesErreurs_locales.mere_email_P = "Email obligatoire";
-          }else if(!emailRegex.test(pere.email_P)){
+          }else if(!emailRegex.test(mere.email_P)){
             lesErreurs_locales.mere_email_P = "Email invalide (exemple@gmail.com)";
           }
 
-          //mot de psse 
-          if(!pere.mdp_P){
-            lesErreurs_locales.pere_mdp_P="mot de passe obligatoire"
-          }
-
-          if (!mere.email_P){
+        if (!mere.mdp_P){
             lesErreurs_locales.mere_mdp_P="mot de passe obligatoire"
+          } else if (mere.mdp_P.length < 8) {
+            lesErreurs_locales.mere_mdp_P="Le mot de passe doit contenir au moins 8 caractères"
           }
 
-          //verif
-           if(!pere.mdp_verif_P){
-            lesErreurs_locales.pere_mdp_verif_P="Confirmation obligatoire"
-          }else if(String(pere.mdp_verif_P) !== String(pere.mdp_P)){
-              lesErreurs_locales.pere_mdp_verif_P="Les mots de passe ne correspond pas  "
-          }
-
-          if(!mere.mdp_verif_P){
+        if(!mere.mdp_verif_P){
             lesErreurs_locales.mere_mdp_verif_P="Confirmation obligatoire"
           }else if(String(mere.mdp_verif_P) !== String(mere.mdp_P)){
               lesErreurs_locales.mere_mdp_verif_P="Les mots de passe ne correspond pas  "
           }
+      }
+      
 
       if (Object.keys(lesErreurs_locales).length > 0) {
         setLeserreursHab(lesErreurs_locales);
         return; 
       }
-   }
 
-   //enfants
-  const ajouterEnfant = () => setEnfants([...enfants, { ...enfantVide }]);
-  const changerEnfant = (i, champ, valeur) =>
-    setEnfants(enfants.map((e, idx) => (idx === i ? { ...e, [champ]: valeur } : e)));
-  const retirerEnfant = (i) => setEnfants(enfants.filter((_, idx) => idx !== i));
+      try{
 
-   const nettoyerParent = (p) => {
-    if (!p.nom_P.trim()) return undefined;        
-    const copie = { ...p };
-    if (!copie.email || !copie.mot_de_passe) {    
-      delete copie.email;
-      delete copie.mot_de_passe;
-    }
-    return copie;
-  };
-  const envoyer = async (e) => {
-    e.preventDefault();
-    setErreurs(null);
-
-    const payload = {
-      logement: Number(logement),
-      pere: nettoyerParent(pere),
-      mere: nettoyerParent(mere),
-      enfants: enfants.map((en) => ({ ...en, profession: en.profession || null })),
-    };
-
-    const rep = await fetch("http://127.0.0.1:8000/api/carnets/", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        Authorization: `Bearer ${localStorage.getItem("token")}`, // adapte à ton auth
-      },
-      body: JSON.stringify(payload),
-    });
-
-    if (rep.ok) {
-        const data = await rep.json();     
+  
+          const perePayload = nettoyerParent(pere);
+          const merePayload = nettoyerParent(mere);
+          const payload = {
+        logement: Number(logementId),
+        ...(perePayload && { pere: perePayload }),
+        ...(merePayload && { mere: merePayload }),
+        enfants: enfants.map((en) => ({
+          nom_Ef: en.nom_Ef,
+          prenom_Ef: en.prenom_Ef,
+          date_nais_Ef: en.date_nais_Ef,
+          lieu_nais_Ef: en.lieu_nais_Ef,
+          nationalite: Number(en.nationalite),
+          profession: en.profession ? Number(en.profession) : null,
+        })),
+        };
+        const { data } = await api.post("/carnets/", payload);
         fermer();
-        setLogement(""); setPere(parentVide); setMere(parentVide); setEnfants([]);
-        onCreated?.(data);           
-
-    } else {
-      setErreurs(await rep.json());  
+        api.get("/logements/")
+          .then(({ data: logementsActualises }) => setLogements(logementsActualises))
+          .catch((error) => console.error("Impossible d'actualiser les logements :", error));
+        onCreated?.(data);                
+      } catch (error) {
+      const details = error.response?.data ?? { detail: error.message || "Erreur réseau pendant l'enregistrement." };
+      console.error("Échec de création du carnet :", {
+        status: error.response?.status,
+        data: details,
+        payload: error.config?.data,
+      });
+      setErreurs(details);
     }
-  };
+  }; 
+
+
   return(
     <>
       <button onClick={ouvrir}>+ Nouveau carnet</button>
 
       <dialog ref={dialogRef}>
         <form className="carnetDialog" onSubmit={btnvalideHabitant}>
-          <div className="btn__fermer" onClick={fermer}>fermer</div>
+          <div className="btn__fermer" onClick={fermer} type="button">
+            <img src={fermerImg} alt="" />
+          </div>
           <h2>Nouveau carnet</h2>
+          {erreurs && (
+            <pre role="alert" style={{ color: "red", whiteSpace: "pre-wrap" }}>
+              {typeof erreurs === "string" ? erreurs : JSON.stringify(erreurs, null, 2)}
+            </pre>
+          )}
 
           <div className="logement__ajout">
             <label>Logement :</label>
@@ -428,7 +464,7 @@ export default function CarnetDialog({}) {
               onChange={setMere} erreurAge={leserreursHab.mere_date_nais} erreurTel = {leserreursHab.mere_tel_p}
               erreurNom = {leserreursHab.mere_nom_p} erreurLieuNais = {leserreursHab.mere_lieu_nais_p}
               erreurNationalite={leserreursHab.mere_nationalite_p}
-              erreurCin={leserreursHab.mere_cin} erreurDateCin={leserreursHab.mere_date_cin} erreurLieuCin={leserreursHab.mere_lieu_cin} erreurPassport={leserreursHab.mere_passport} erreurDateExp={leserreursHab.mere_date_exp} erreurProf={leserreursHab.pere_prof_p}
+              erreurCin={leserreursHab.mere_cin} erreurDateCin={leserreursHab.mere_date_cin} erreurLieuCin={leserreursHab.mere_lieu_cin} erreurPassport={leserreursHab.mere_passport} erreurDateExp={leserreursHab.mere_date_exp} erreurProf={leserreursHab.mere_prof_p}
               erreurEmail={leserreursHab.mere_email_P} erreurMdp={leserreursHab.mere_mdp_P} erreurMdpVerif={leserreursHab.mere_mdp_verif_P}/> 
           </div>
 
@@ -436,7 +472,7 @@ export default function CarnetDialog({}) {
             <h3>Enfant</h3>
               {enfants.map((en, i) => (
               <fieldset key={i}>
-                <legend>Enfant {i + 1}</legend>
+                <legend>Enfant N°{i + 1}</legend>
                 <input placeholder="Nom" value={en.nom_Ef}
                   onChange={(e) => changerEnfant(i, "nom_Ef", e.target.value)} required />
                 <input placeholder="Prénom" value={en.prenom_Ef}
@@ -448,20 +484,21 @@ export default function CarnetDialog({}) {
                 <select value={en.nationalite}
                   onChange={(e) => changerEnfant(i, "nationalite", e.target.value)} required>
                   <option value="">Nationalité</option>
-                  {nationalites.map((n) => <option key={n.id} value={n.id}>{n.nom_N ?? n.id}</option>)}
+                  {nationalites.map((n) => <option key={n.id} value={n.id}>{n.nationalite ?? n.id}</option>)}
+
+                  
                 </select>
                 <button type="button" onClick={() => retirerEnfant(i)}>Retirer</button>
               </fieldset>
             ))}
-            <button type="button" onClick={ajouterEnfant}>+ Ajouter un enfant</button>
+            <button type="button" onClick={ajouterEnfant} className="ajouter__enfant">+ Ajouter un enfant</button>
 
-            {erreurs && <pre style={{ color: "red" }}>{JSON.stringify(erreurs, null, 2)}</pre>}
           </div>
 
-
+            <p style={{color:"red" ,size:"1rem"}}>{erreursChef} </p>
           <div className="btn__carnetDialog btn__action">
               <button className="btn__valider" type="submit">Valider</button>
-              <button onClick={fermer} className="btn__annuler">Annuler</button>
+              <button onClick={fermer} className="btn__annuler" type="button">Annuler</button>
           </div>
         </form>
       </dialog>
@@ -494,7 +531,7 @@ export default function CarnetDialog({}) {
             {erreursLog.largeur && <p style={{ color: "red" }}>{erreursLog.largeur}</p>}
         </form>
         
-
+           
         <div className="action__log btn__action">
           <button className="btn__valider" onClick={btnvalideLog}>Enregistrer</button>
           <button onClick={fermerLog} className="btn__annuler">Annuler</button>
@@ -586,6 +623,12 @@ function ParentFields({ titre, professions = [], nationalites = [], valeur, onCh
                 <input type="text" value={valeur.Passport || ""} onChange={(e) => set("Passport", e.target.value)} />
                 {erreurPassport && <p style={{ color: "red" }}>{erreurPassport}</p>}
                 
+                <label htmlFor="">Date de délivrance</label>
+                <input type="date" value={valeur.date_delivrence_P || ""} onChange={(e) => set("date_delivrence_P", e.target.value)} />
+
+                <label htmlFor="">Lieu de délivrance</label>
+                <input type="text" value={valeur.lieu_delivrence_P || ""} onChange={(e) => set("lieu_delivrence_P", e.target.value)} />
+
                 <label htmlFor="">Date d'expiration</label>
                 <input type="date" value={valeur.date_expiration || ""} onChange={(e) => set("date_expiration", e.target.value)} />
                  {erreurDateExp && <p style={{ color: "red" }}>{erreurDateExp}</p>}
@@ -619,7 +662,7 @@ function ParentFields({ titre, professions = [], nationalites = [], valeur, onCh
             <input type="text" value={valeur.email_P || ""} onChange={(e) => set("email_P", e.target.value)} />
             {erreurEmail && <p style={{ color: "red" }}>{erreurEmail}</p>}
             <label htmlFor="">Mot de passe</label>
-            <input type="password" value={valeur.mdp || ""} onChange={(e) => set("mdp", e.target.value)} />
+            <input type="password" value={valeur.mdp_P || ""} onChange={(e) => set("mdp_P", e.target.value)} />
             {erreurMdp && <p style={{ color: "red" }}>{erreurMdp}</p>}
             <label htmlFor="">Confirmation mot de passe</label>
             <input type="password" value={valeur.mdp_verif_P || ""} onChange={(e) => set("mdp_verif_P", e.target.value)} />
