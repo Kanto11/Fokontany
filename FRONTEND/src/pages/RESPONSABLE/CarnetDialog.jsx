@@ -3,11 +3,11 @@ import api from "../../api";
 import ajouter from "../../assets/Icons/plus.png";
 import fermerImg from "../../assets/Icons/cross.png";
 const parentVide ={
-  nom_P : "" , prenom_P : "" ,date_nais_P : "" ,lieu_nais_P :"", nom_pere_P : "", nom_mere_P: "" , prof_P :"" ,tel_P : "",nationalite_P :"", proprietaire_P : false , email_P : "" , mdp_P :"" ,mdp_verif_P : "" , Cin_P : " ",date_delivrence_P : "" ,lieu_delivrence_P : "" , Passport :"" , date_expiration :""}
+  nom_P : "" , prenom_P : "" ,date_nais_P : "" ,lieu_nais_P :"", nom_pere_P : "", nom_mere_P: "" , prof_P :"" ,tel_P : "",nationalite_P :"", proprietaire_P : false , email_P : "" , mdp_P :"" ,mdp_verif_P : "" , Cin_P : " ",date_delivrence_P : "" ,lieu_delivrence_P : "" , Passport :"" , date_expiration :"", photo: null}
 
 const enfantVide = {
   nom_Ef: "", prenom_Ef: "", date_nais_Ef: "", lieu_nais_Ef: "",
-  nationalite: "", profession: "",
+  nationalite: "", profession: "", photo: null,
 };
 
 export default function CarnetDialog({ onCreated }) {
@@ -397,11 +397,42 @@ export default function CarnetDialog({ onCreated }) {
         })),
         };
         const { data } = await api.post("/carnets/", payload);
+        const photosAEnvoyer = [];
+
+        if (perePayload?.photo && data.pere) {
+          photosAEnvoyer.push([`/parents/${data.pere}/photo/`, perePayload.photo]);
+        }
+        if (merePayload?.photo && data.mere) {
+          photosAEnvoyer.push([`/parents/${data.mere}/photo/`, merePayload.photo]);
+        }
+        enfants.forEach((enfant, index) => {
+          if (enfant.photo && data.enfants?.[index]) {
+            photosAEnvoyer.push([`/enfants/${data.enfants[index]}/photo/`, enfant.photo]);
+          }
+        });
+
+        const resultatsPhotos = await Promise.allSettled(
+          photosAEnvoyer.map(([url, fichier]) => {
+            const formData = new FormData();
+            formData.append("photo", fichier);
+            return api.post(url, formData);
+          })
+        );
+        const erreursPhotos = resultatsPhotos
+          .filter((resultat) => resultat.status === "rejected")
+          .map((resultat) => resultat.reason.response?.data?.photo?.[0]
+            || resultat.reason.response?.data?.detail
+            || resultat.reason.message);
+
+        if (erreursPhotos.length) {
+          console.error("Le carnet est créé, mais certains uploads photo ont échoué :", erreursPhotos);
+        }
+
         fermer();
         api.get("/logements/")
           .then(({ data: logementsActualises }) => setLogements(logementsActualises))
           .catch((error) => console.error("Impossible d'actualiser les logements :", error));
-        onCreated?.(data);                
+        onCreated?.(data, erreursPhotos);      
       } catch (error) {
       const details = error.response?.data ?? { detail: error.message || "Erreur réseau pendant l'enregistrement." };
       console.error("Échec de création du carnet :", {
@@ -481,12 +512,20 @@ export default function CarnetDialog({ onCreated }) {
                   onChange={(e) => changerEnfant(i, "date_nais_Ef", e.target.value)} required />
                 <input placeholder="Lieu de naissance" value={en.lieu_nais_Ef}
                   onChange={(e) => changerEnfant(i, "lieu_nais_Ef", e.target.value)} required />
+                <label>Photo de l'enfant :</label>
+                <input type="file" accept="image/*"
+                  onChange={(e) => changerEnfant(i, "photo", e.target.files?.[0] || null)} />
+
+                <label>Nationalité :</label>
                 <select value={en.nationalite}
                   onChange={(e) => changerEnfant(i, "nationalite", e.target.value)} required>
                   <option value="">Nationalité</option>
                   {nationalites.map((n) => <option key={n.id} value={n.id}>{n.nationalite ?? n.id}</option>)}
-
-                  
+                </select>
+                <label>Profession :</label>
+                <select value={en.profession} onChange={(e) =>changerEnfant(i,"profession",e.target.value)} required>
+                  <option value="">Profession</option>
+                  {professions.map((p) => <option key={p.id} value={p.id}>{p.nom_Prof ?? p.id}</option>)}
                 </select>
                 <button type="button" onClick={() => retirerEnfant(i)}>Retirer</button>
               </fieldset>
@@ -578,7 +617,8 @@ function ParentFields({ titre, professions = [], nationalites = [], valeur, onCh
       <input type="text" value={valeur.nom_mere_P || ""} onChange={(e) => set("nom_mere_P", e.target.value)} />
 
       <label htmlFor="">Photo</label>
-      <input type="file" name="" id="" />
+      <input type="file" accept="image/*"
+        onChange={(e) => set("photo", e.target.files?.[0] || null)} />
 
       <label htmlFor="">Téléphone : (10 Chiffres)</label>
       <input type="text"  value={valeur.tel_P || ""} onChange={(e) => set("tel_P", e.target.value)} />

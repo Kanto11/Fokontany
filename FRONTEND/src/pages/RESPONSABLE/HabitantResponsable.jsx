@@ -16,16 +16,17 @@ export default function HabitantsResponsable() {
   const [nationalites , setNationalites] = useState([]);
   const [page,setPage] = useState(1)
   const [totalPage , setTotalPage] = useState(1)
+  const [versionCarnets, setVersionCarnets] = useState(0);
 
   const [recherche, setRecherche] = useState("");
   const [secteur, setSecteur] = useState("");
   const [profession, setProfession] = useState("");
   const [chargement, setChargement] = useState(true);
   const [erreur, setErreur] = useState("");
+  const [notification, setNotification] = useState("");
 
   const [carnetSelectionne, setCarnetSelectionne]= useState(null)
   const modalVoir = useRef(null);
-  const [dialogOuvert, setDialogOuvert] = useState(false);
 
 
   useEffect(() => {
@@ -49,7 +50,7 @@ export default function HabitantsResponsable() {
         .finally(() => setChargement(false));
     }, 300);
     return () => clearTimeout(minuteur);
-  }, [recherche, secteur, profession,page]);
+  }, [recherche, secteur, profession, page, versionCarnets]);
 
   useEffect(()=>{
     setPage(1);
@@ -113,8 +114,15 @@ async function ouvrirDétailsCarnet(carnet) {
                   logements = {logements}
                   professions ={professions}
                   nationalites = {nationalites}
-                  onCreated={(nouveauCarnet)=>{
-                    setCarnets([nouveauCarnet,...carnets]);
+                  onCreated={(_, erreursPhotos = [])=>{
+                    setRecherche("");
+                    setSecteur("");
+                    setProfession("");
+                    setPage(1);
+                    setVersionCarnets((version) => version + 1);
+                    setNotification(erreursPhotos.length
+                      ? `Carnet créé, mais l'envoi d'une ou plusieurs photos a échoué : ${erreursPhotos.join(" ")}`
+                      : "");
                   }}
                 />
               </div>
@@ -126,6 +134,7 @@ async function ouvrirDétailsCarnet(carnet) {
         <div className="habitant__resp__body">
           <div className="habitant__resp__left">
             {erreur && <p className="alerte alerte--erreur">{erreur}</p>}
+            {notification && <p className="alerte alerte--erreur" role="alert">{notification}</p>}
             <table>
               <thead>
                 <tr>
@@ -166,16 +175,6 @@ async function ouvrirDétailsCarnet(carnet) {
             
           </div>
           
-        {/* <div className="habitant__resp__right">
-                <CarnetDialog 
-                  logements = {logements}
-                  professions ={professions}
-                  nationalites = {nationalites}
-                  onCreated={(nouveauCarnet)=>{
-                    setCarnets([nouveauCarnet,...carnets]);
-                  }}
-                />
-         </div> */}
         <div className="res__resp__footer pagination__parent">
                           
             <div className="pagination__action">
@@ -217,6 +216,14 @@ async function ouvrirDétailsCarnet(carnet) {
 
                   {carnetSelectionne?.pere ? (
                     <div>
+                      {carnetSelectionne.pere.photo ? (
+                        <img
+                          src={carnetSelectionne.pere.photo}
+                          alt={`Photo de ${carnetSelectionne.pere.prenom_P} ${carnetSelectionne.pere.nom_P}`}
+                          loading="lazy"
+                          style={{ width: 112, height: 112, objectFit: "cover", borderRadius: 6 }}
+                        />
+                      ) : <p>Photo non renseignée.</p>}
                       <p><strong>Nom :</strong> {carnetSelectionne.pere.nom_P}</p>
                       <p><strong>Prénom :</strong> {carnetSelectionne.pere.prenom_P}</p>
                       <p>
@@ -247,6 +254,14 @@ async function ouvrirDétailsCarnet(carnet) {
 
                   {carnetSelectionne?.mere ? (
                     <div>
+                      {carnetSelectionne.mere.photo ? (
+                        <img
+                          src={carnetSelectionne.mere.photo}
+                          alt={`Photo de ${carnetSelectionne.mere.prenom_P} ${carnetSelectionne.mere.nom_P}`}
+                          loading="lazy"
+                          style={{ width: 112, height: 112, objectFit: "cover", borderRadius: 6 }}
+                        />
+                      ) : <p>Photo non renseignée.</p>}
                       <p><strong>Nom :</strong> {carnetSelectionne.mere.nom_P}</p>
                       <p><strong>Prénom :</strong> {carnetSelectionne.mere.prenom_P}</p>
                       <p>
@@ -281,6 +296,14 @@ async function ouvrirDétailsCarnet(carnet) {
                     carnetSelectionne.enfants.map((enfant, index) => (
                       <div className="enfant-card" key={enfant.id || index}>
                         <h4>Enfant {index + 1}</h4>
+                        {enfant.photo ? (
+                          <img
+                            src={enfant.photo}
+                            alt={`Photo de ${enfant.prenom_Ef} ${enfant.nom_Ef}`}
+                            loading="lazy"
+                            style={{ width: 96, height: 96, objectFit: "cover", borderRadius: 6 }}
+                          />
+                        ) : <p>Photo non renseignée.</p>}
 
                         <p><strong>Nom :</strong> {enfant.nom_Ef}</p>
                         <p><strong>Prénom :</strong> {enfant.prenom_Ef}</p>

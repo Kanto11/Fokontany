@@ -475,7 +475,6 @@ class CarnetDetailView(RetrieveAPIView):
 
     def get_queryset(self):
         quartier = self.request.user.responsable.quartier
-
         return (
             Carnet.objects
             .filter(logement__secteur__quartier=quartier)

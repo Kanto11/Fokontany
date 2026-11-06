@@ -47,14 +47,14 @@ class NationaliteSerializer(serializers.ModelSerializer):
         fields = ["id", "nationalite"]
 class ParentDetailSerializer(serializers.ModelSerializer):
     nationalite = NationaliteSerializer(read_only=True)
-    piece = PieceSerializer(source="pieceidentite", read_only=True)
+    piece = PieceSerializer(read_only=True)
 
     class Meta:
         model = Parent
         fields = [
             "nom_P", "prenom_P", "date_nais_P", "lieu_nais_P",
             "nom_pere_P", "nom_mere_P", "tel_P",
-            "proprietaire_P", "profession", "nationalite", "piece",
+            "proprietaire_P", "profession", "nationalite", "piece", "photo",
         ]
 
 

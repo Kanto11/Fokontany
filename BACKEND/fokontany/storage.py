@@ -14,7 +14,7 @@ class CloudinaryStorage(Storage):
     def _save(self,name,content):
         racine, _ = os.path.splitext(name)
         content.seek(0)
-        cloudinary.uploader.upload(content,public_id=racine,ressource_type="image",overwrite=True)
+        cloudinary.uploader.upload(content, public_id=racine, resource_type="image", overwrite=True)
         return name
 
     def url(self,name):
