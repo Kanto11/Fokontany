@@ -652,12 +652,11 @@ class ResidenceBureauView(APIView):
             return Response({"id": r.id, "status": r.status, "blocages": blocages}, status=201)
 
         except Exception as e:
-            # 1. Ceci va forcer l'affichage du crash exact (le Stack Trace) dans vos logs Render
             print("--- DEBUT DU CRASH DETECTE ---")
             print(traceback.format_exc())
             print("--- FIN DU CRASH DETECTE ---")
             
-            # 2. Cela renverra le vrai message de l'erreur au frontend à la place de la page HTML 500
+            
             return Response({"detail": f"Erreur interne interceptée : {str(e)}"}, status=500)
 
 class ResidenceResponsableListView(APIView):
