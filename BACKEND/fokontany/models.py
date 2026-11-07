@@ -118,7 +118,7 @@ class Parent(models.Model):
     proprietaire_P = models.BooleanField(default=False)
     profession = models.ForeignKey(Profession, on_delete=models.PROTECT)
     nationalite = models.ForeignKey(Nationalite, on_delete=models.PROTECT)
-    photo = models.ImageField(upload_to="parents/", blank=True)
+    photo = models.ImageField(upload_to="photos/parents/", blank=True)
     def __str__ (self):
         return f"{self.nom_P}-{self.prenom_P}"
 
@@ -157,7 +157,7 @@ class Enfant(models.Model):
     lieu_nais_Ef = models.CharField(max_length=100)
     profession = models.ForeignKey(Profession ,blank=True , null = True, on_delete =models.SET_NULL)
     nationalite = models.ForeignKey(Nationalite, on_delete = models.PROTECT)
-    photo = models.ImageField(upload_to="enfants/", blank=True)
+    photo = models.ImageField(upload_to="photos/enfants/", blank=True)
     def __str__(self):
         return f"{self.nom_Ef}-{self.prenom_Ef}"
 

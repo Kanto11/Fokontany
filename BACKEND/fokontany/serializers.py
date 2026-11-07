@@ -335,8 +335,8 @@ class PhotoSerializer(serializers.Serializer):
     photo = serializers.ImageField()
 
     def validate_photo(self, fichier):
-        if fichier.size > 2 * 1024 * 1024:
-            raise serializers.ValidationError("Photo trop lourde (2 Mo maximum).")
+        if fichier.size > 20 * 1024 * 1024:
+            raise serializers.ValidationError("Photo trop lourde (20 Mo maximum).")
         return fichier
 
 # list
