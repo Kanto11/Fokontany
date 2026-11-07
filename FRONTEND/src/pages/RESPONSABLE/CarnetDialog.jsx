@@ -399,11 +399,11 @@ export default function CarnetDialog({ onCreated }) {
         const { data } = await api.post("/carnets/", payload);
         const photosAEnvoyer = [];
 
-        if (perePayload?.photo && data.pere) {
-          photosAEnvoyer.push([`/parents/${data.pere}/photo/`, perePayload.photo]);
+        if (pere?.photo && data.pere) {
+          photosAEnvoyer.push([`/parents/${data.pere}/photo/`, pere.photo]);
         }
-        if (merePayload?.photo && data.mere) {
-          photosAEnvoyer.push([`/parents/${data.mere}/photo/`, merePayload.photo]);
+        if (mere?.photo && data.mere) {
+          photosAEnvoyer.push([`/parents/${data.mere}/photo/`, mere.photo]);
         }
         enfants.forEach((enfant, index) => {
           if (enfant.photo && data.enfants?.[index]) {
