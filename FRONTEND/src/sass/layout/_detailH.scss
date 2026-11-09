@@ -1,0 +1,13 @@
+@use '../abstract' as*;
+
+.details-carnet{
+    .btn__fermer{
+        position: absolute;
+        top: 5px;
+        right: 5px;
+    }
+}
+.details__h{
+    @include dflex();
+    gap: 3rem;
+}

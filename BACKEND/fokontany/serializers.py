@@ -52,7 +52,7 @@ class ParentDetailSerializer(serializers.ModelSerializer):
     class Meta:
         model = Parent
         fields = [
-            "nom_P", "prenom_P", "date_nais_P", "lieu_nais_P",
+            "id", "nom_P", "prenom_P", "date_nais_P", "lieu_nais_P",
             "nom_pere_P", "nom_mere_P", "tel_P",
             "proprietaire_P", "profession", "nationalite", "piece", "photo",
         ]
@@ -211,6 +211,135 @@ class CarnetCreateSerializer(serializers.Serializer):
 
         except DjangoValidationError as err:
             raise serializers.ValidationError(err.messages)
+
+
+class CarnetUpdateSerializer(serializers.Serializer):
+    logement = serializers.PrimaryKeyRelatedField(queryset=Logement.objects.all())
+    pere = serializers.DictField(allow_null=True)
+    mere = serializers.DictField(allow_null=True)
+    enfants = serializers.ListField(child=serializers.DictField())
+
+    def validate_logement(self, logement):
+        quartier_id = self.context["request"].user.responsable.quartier_id
+        if logement.secteur.quartier_id != quartier_id:
+            raise serializers.ValidationError(
+                "Le logement doit appartenir à votre quartier."
+            )
+        return logement
+
+    def validate(self, data):
+        if not data.get("pere") and not data.get("mere"):
+            raise serializers.ValidationError(
+                "Il faut renseigner au moins un parent."
+            )
+        return data
+
+    def _valider_parent(self, role, parent_data, carnet):
+        if parent_data is None:
+            return None
+
+        parent_data = dict(parent_data)
+        parent_id = parent_data.pop("id", None)
+        parent_existant = getattr(carnet, role)
+
+        if parent_id is not None:
+            parent_id = serializers.IntegerField().run_validation(parent_id)
+        if parent_id is not None and (
+            parent_existant is None or parent_existant.id != parent_id
+        ):
+            raise serializers.ValidationError({
+                role: "Le parent fourni ne correspond pas à ce carnet."
+            })
+        if parent_existant and (
+            "email" in parent_data or "mot_de_passe" in parent_data
+        ):
+            raise serializers.ValidationError({
+                role: "Les identifiants du compte ne peuvent pas être modifiés ici."
+            })
+
+        serializer = ParentInSerializer(data=parent_data)
+        serializer.is_valid(raise_exception=True)
+        return parent_existant, serializer.validated_data
+
+    def update(self, carnet, validated_data):
+        with transaction.atomic():
+            carnet.logement = validated_data["logement"]
+
+            for role in ("pere", "mere"):
+                parent_info = self._valider_parent(
+                    role, validated_data[role], carnet
+                )
+                if parent_info is None:
+                    setattr(carnet, role, None)
+                    continue
+
+                parent_existant, parent_data = parent_info
+                piece_data = parent_data.pop("piece", None)
+
+                if parent_existant is None:
+                    parent = CarnetCreateSerializer()._creer_parent(parent_data)
+                else:
+                    parent = parent_existant
+                    for field, value in parent_data.items():
+                        if field not in ("email", "mot_de_passe"):
+                            setattr(parent, field, value)
+                    parent.save()
+
+                if piece_data:
+                    PieceIdentite.objects.update_or_create(
+                        parent=parent,
+                        defaults=piece_data,
+                    )
+                else:
+                    PieceIdentite.objects.filter(parent=parent).delete()
+
+                setattr(carnet, role, parent)
+
+            carnet.save()
+
+            enfants_conserves = []
+            enfants_ids = []
+            for enfant_data in validated_data["enfants"]:
+                enfant_data = dict(enfant_data)
+                enfant_id = enfant_data.pop("id", None)
+                if enfant_id is not None:
+                    enfant_id = serializers.IntegerField().run_validation(enfant_id)
+                    if enfant_id in enfants_ids:
+                        raise serializers.ValidationError({
+                            "enfants": "Un enfant ne peut apparaître qu'une seule fois."
+                        })
+                piece_data = enfant_data.pop("piece", None)
+                serializer = EnfantInSerializer(data=enfant_data)
+                serializer.is_valid(raise_exception=True)
+
+                if enfant_id:
+                    enfant = carnet.enfants.filter(pk=enfant_id).first()
+                    if enfant is None:
+                        raise serializers.ValidationError({
+                            "enfants": "Un enfant fourni ne correspond pas à ce carnet."
+                        })
+                    for field, value in serializer.validated_data.items():
+                        if field != "piece":
+                            setattr(enfant, field, value)
+                    enfant.save()
+                else:
+                    enfant = Enfant.objects.create(
+                        carnet=carnet,
+                        **serializer.validated_data,
+                    )
+
+                if piece_data:
+                    PieceIdentite.objects.update_or_create(
+                        enfant=enfant,
+                        defaults=piece_data,
+                    )
+                enfants_conserves.append(enfant.id)
+                enfants_ids.append(enfant.id)
+
+            carnet.enfants.exclude(id__in=enfants_conserves).delete()
+
+        self.enfants_ids = enfants_ids
+        return carnet
 #Liste deroulantes 
 class NationaliteSerializer(serializers.ModelSerializer):
     class Meta :

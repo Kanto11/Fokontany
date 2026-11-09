@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useImperativeHandle, useLayoutEffect, useRef, useState } from "react";
 import api from "../../api";
 import ajouter from "../../assets/Icons/plus.png";
 import fermerImg from "../../assets/Icons/cross.png";
@@ -10,9 +10,18 @@ const enfantVide = {
   nationalite: "", profession: "", photo: null,
 };
 
-export default function CarnetDialog({ onCreated }) {
+export default function CarnetDialog({onCreated,onUpdated,onCancel,carnet = null,ref,}) {
+  const modeEdition = Boolean(carnet);
   const dialogRef = useRef(null);     
   const ouvrir = () => dialogRef.current.showModal();
+  useImperativeHandle(ref, () => ({
+    ouvrir: () => {
+      const dialog = dialogRef.current;
+      if (dialog && !dialog.open) {
+        dialog.showModal();
+      }
+    },
+    }), []);
   const fermer = () => {
   if (dialogRef.current) {
     dialogRef.current.close();
@@ -23,7 +32,7 @@ export default function CarnetDialog({ onCreated }) {
     setAdresseH("");
     setEnfants([]);
     setLeserreursHab({});
-};
+    };
 
 
   //--------------------log-declaration------------------------
@@ -105,6 +114,40 @@ export default function CarnetDialog({ onCreated }) {
     api.get("/nationalites/").then(({data}) => setNationalites(data)).catch(()=>{});
   },[])
 
+  useLayoutEffect(() => {
+    if (!carnet) return;
+
+    const preparerParent = (parent) => {
+      if (!parent) return { ...parentVide };
+      return {
+        ...parentVide,
+        ...parent,
+        nationalite_P: parent.nationalite?.id?.toString() || "",
+        profession_id: parent.profession?.toString() || "",
+        est_proprietaire: Boolean(parent.proprietaire_P),
+        Cin_P: parent.piece?.type_piece === "CIN" ? parent.piece.numero : "",
+        Passport: parent.piece?.type_piece === "PASSPORT" ? parent.piece.numero : "",
+        date_delivrence_P: parent.piece?.date_delivrance || "",
+        lieu_delivrence_P: parent.piece?.lieu_delivrance || "",
+        date_expiration: parent.piece?.date_expiration || "",
+        photo_url: parent.photo || "",
+        photo: null,
+      };
+    };
+
+    setAdresseH(carnet.adresse || "");
+    setLogementId(carnet.logement?.toString() || "");
+    setPere(preparerParent(carnet.pere));
+    setMere(preparerParent(carnet.mere));
+    setEnfants((carnet.enfants || []).map((enfant) => ({
+      ...enfant,
+      nationalite: enfant.nationalite?.id?.toString() || "",
+      profession: enfant.profession?.toString() || "",
+      photo_url: enfant.photo || "",
+      photo: null,
+    })));
+  }, [carnet]);
+
 
   //----------------------validation-------------------
    const btnvalideLog =  async (e) => {
@@ -169,6 +212,7 @@ export default function CarnetDialog({ onCreated }) {
 
     const nationalite = Number(p.nationalite_P);
     const parent = {
+      ...(p.id && { id: p.id }),
       nom_P: p.nom_P.trim(),
       prenom_P: p.prenom_P,
       date_nais_P: p.date_nais_P,
@@ -204,6 +248,7 @@ export default function CarnetDialog({ onCreated }) {
       setLeserreursHab({});
       setErreurs(null);
       setErreurLogHab("");
+      setErreursChef("");
 
       if (!logementId) {
         setErreurLogHab("Veuillez lier un logement valide.");
@@ -276,23 +321,24 @@ export default function CarnetDialog({ onCreated }) {
               lesErreurs_locales.pere_prof_P = "Profession obligatoire";
 
             }
-        if (!pere.email_P || !pere.email_P.trim()){
-            lesErreurs_locales.pere_email_P = "Email obligatoire";
-          }else if(!emailRegex.test(pere.email_P)){
-            lesErreurs_locales.pere_email_P = "Email invalide (exemple@gmail.com)";
-          }
+          if (!modeEdition || !pere.id) {
+            if (!pere.email_P || !pere.email_P.trim()) {
+              lesErreurs_locales.pere_email_P = "Email obligatoire";
+            } else if (!emailRegex.test(pere.email_P)) {
+              lesErreurs_locales.pere_email_P = "Email invalide (exemple@gmail.com)";
+            }
 
-        if(!pere.mdp_P){
-            lesErreurs_locales.pere_mdp_P="mot de passe obligatoire"
-          } else if (pere.mdp_P.length < 8) {
-            lesErreurs_locales.pere_mdp_P="Le mot de passe doit contenir au moins 8 caractères"
-          }
+            if (!pere.mdp_P) {
+              lesErreurs_locales.pere_mdp_P = "mot de passe obligatoire";
+            } else if (pere.mdp_P.length < 8) {
+              lesErreurs_locales.pere_mdp_P = "Le mot de passe doit contenir au moins 8 caractères";
+            }
 
-        if(!pere.mdp_verif_P){
-            lesErreurs_locales.pere_mdp_verif_P="Confirmation obligatoire"
-          }else if(String(pere.mdp_verif_P) !== String(pere.mdp_P)){
-              lesErreurs_locales.pere_mdp_verif_P="Les mots de passe ne correspond pas  "
-              console.log(pere.mdp_P)
+            if (!pere.mdp_verif_P) {
+              lesErreurs_locales.pere_mdp_verif_P = "Confirmation obligatoire";
+            } else if (String(pere.mdp_verif_P) !== String(pere.mdp_P)) {
+              lesErreurs_locales.pere_mdp_verif_P = "Les mots de passe ne correspondent pas";
+            }
           }
       }
 
@@ -353,26 +399,28 @@ export default function CarnetDialog({ onCreated }) {
 
             }
 
-        if (!mere.email_P){
+        if (!modeEdition || !mere.id) {
+          if (!mere.email_P || !mere.email_P.trim()) {
             lesErreurs_locales.mere_email_P = "Email obligatoire";
-          }else if(!emailRegex.test(mere.email_P)){
+          } else if (!emailRegex.test(mere.email_P)) {
             lesErreurs_locales.mere_email_P = "Email invalide (exemple@gmail.com)";
           }
 
-        if (!mere.mdp_P){
-            lesErreurs_locales.mere_mdp_P="mot de passe obligatoire"
+          if (!mere.mdp_P) {
+            lesErreurs_locales.mere_mdp_P = "mot de passe obligatoire";
           } else if (mere.mdp_P.length < 8) {
-            lesErreurs_locales.mere_mdp_P="Le mot de passe doit contenir au moins 8 caractères"
+            lesErreurs_locales.mere_mdp_P = "Le mot de passe doit contenir au moins 8 caractères";
           }
 
-        if(!mere.mdp_verif_P){
-            lesErreurs_locales.mere_mdp_verif_P="Confirmation obligatoire"
-          }else if(String(mere.mdp_verif_P) !== String(mere.mdp_P)){
-              lesErreurs_locales.mere_mdp_verif_P="Les mots de passe ne correspond pas  "
+          if (!mere.mdp_verif_P) {
+            lesErreurs_locales.mere_mdp_verif_P = "Confirmation obligatoire";
+          } else if (String(mere.mdp_verif_P) !== String(mere.mdp_P)) {
+            lesErreurs_locales.mere_mdp_verif_P = "Les mots de passe ne correspondent pas";
           }
       }
       
 
+    }
       if (Object.keys(lesErreurs_locales).length > 0) {
         setLeserreursHab(lesErreurs_locales);
         return; 
@@ -385,9 +433,14 @@ export default function CarnetDialog({ onCreated }) {
           const merePayload = nettoyerParent(mere);
           const payload = {
         logement: Number(logementId),
-        ...(perePayload && { pere: perePayload }),
-        ...(merePayload && { mere: merePayload }),
+        ...(modeEdition
+          ? { pere: perePayload, mere: merePayload }
+          : {
+              ...(perePayload && { pere: perePayload }),
+              ...(merePayload && { mere: merePayload }),
+            }),
         enfants: enfants.map((en) => ({
+          ...(en.id && { id: en.id }),
           nom_Ef: en.nom_Ef,
           prenom_Ef: en.prenom_Ef,
           date_nais_Ef: en.date_nais_Ef,
@@ -396,18 +449,26 @@ export default function CarnetDialog({ onCreated }) {
           profession: en.profession ? Number(en.profession) : null,
         })),
         };
-        const { data } = await api.post("/carnets/", payload);
-        const photosAEnvoyer = [];
 
-        if (pere?.photo && data.pere) {
-          photosAEnvoyer.push([`/parents/${data.pere}/photo/`, pere.photo]);
+        const { data } = modeEdition
+          ? await api.patch(`/carnets/${carnet.id}/`, payload)
+          : await api.post("/carnets/", payload);
+        const photosAEnvoyer = [];
+        const pereId = modeEdition ? data.pere?.id : data.pere;
+        const mereId = modeEdition ? data.mere?.id : data.mere;
+
+        if (pere?.photo && pereId) {
+          photosAEnvoyer.push([`/parents/${pereId}/photo/`, pere.photo]);
         }
-        if (mere?.photo && data.mere) {
-          photosAEnvoyer.push([`/parents/${data.mere}/photo/`, mere.photo]);
+        if (mere?.photo && mereId) {
+          photosAEnvoyer.push([`/parents/${mereId}/photo/`, mere.photo]);
         }
         enfants.forEach((enfant, index) => {
-          if (enfant.photo && data.enfants?.[index]) {
-            photosAEnvoyer.push([`/enfants/${data.enfants[index]}/photo/`, enfant.photo]);
+          const enfantId = modeEdition
+            ? data.enfants_ids?.[index]
+            : data.enfants?.[index];
+          if (enfant.photo && enfantId) {
+            photosAEnvoyer.push([`/enfants/${enfantId}/photo/`, enfant.photo]);
           }
         });
 
@@ -425,36 +486,43 @@ export default function CarnetDialog({ onCreated }) {
             || resultat.reason.message);
 
         if (erreursPhotos.length) {
-          console.error("Le carnet est créé, mais certains uploads photo ont échoué :", erreursPhotos);
+          console.error(
+            `Le carnet est ${modeEdition ? "modifié" : "créé"}, mais certains uploads photo ont échoué :`,
+            erreursPhotos,
+          );
         }
 
         fermer();
+
         api.get("/logements/")
           .then(({ data: logementsActualises }) => setLogements(logementsActualises))
           .catch((error) => console.error("Impossible d'actualiser les logements :", error));
-        onCreated?.(data, erreursPhotos);      
+        if (modeEdition) {
+          onUpdated?.(data, erreursPhotos);
+        } else {
+          onCreated?.(data, erreursPhotos);
+        }
       } catch (error) {
       const details = error.response?.data ?? { detail: error.message || "Erreur réseau pendant l'enregistrement." };
-      console.error("Échec de création du carnet :", {
+      console.error(`Échec de ${modeEdition ? "modification" : "création"} du carnet :`, {
         status: error.response?.status,
         data: details,
         payload: error.config?.data,
       });
       setErreurs(details);
     }
-  }; 
-
+  }
 
   return(
     <>
-      <button onClick={ouvrir}>+ Nouveau carnet</button>
+      {!modeEdition && <button onClick={ouvrir}>+ Nouveau carnet</button>}
 
-      <dialog ref={dialogRef}>
+      <dialog ref={dialogRef} onClose={() => onCancel?.()}>
         <form className="carnetDialog" onSubmit={btnvalideHabitant}>
           <div className="btn__fermer" onClick={fermer} type="button">
             <img src={fermerImg} alt="" />
           </div>
-          <h2>Nouveau carnet</h2>
+          <h2>{modeEdition ? "Modifier le carnet" : "Nouveau carnet"}</h2>
           {erreurs && (
             <pre role="alert" style={{ color: "red", whiteSpace: "pre-wrap" }}>
               {typeof erreurs === "string" ? erreurs : JSON.stringify(erreurs, null, 2)}
@@ -490,13 +558,15 @@ export default function CarnetDialog({ onCreated }) {
               erreurNationalite={leserreursHab.pere_nationalite_p}
               erreurCin={leserreursHab.pere_cin} erreurDateCin={leserreursHab.pere_date_cin} erreurLieuCin={leserreursHab.pere_lieu_cin} erreurPassport={leserreursHab.pere_passport} erreurDateExp={leserreursHab.pere_date_exp} erreurProf={leserreursHab.pere_prof_p}
               erreurEmail={leserreursHab.pere_email_P} erreurMdp={leserreursHab.pere_mdp_P} erreurMdpVerif={leserreursHab.pere_mdp_verif_P}
+              compteExistant={modeEdition && Boolean(pere.id)}
              />
               <ParentFields titre="Mère" professions= {professions} nationalites={nationalites} valeur={mere} 
               onChange={setMere} erreurAge={leserreursHab.mere_date_nais} erreurTel = {leserreursHab.mere_tel_p}
               erreurNom = {leserreursHab.mere_nom_p} erreurLieuNais = {leserreursHab.mere_lieu_nais_p}
               erreurNationalite={leserreursHab.mere_nationalite_p}
               erreurCin={leserreursHab.mere_cin} erreurDateCin={leserreursHab.mere_date_cin} erreurLieuCin={leserreursHab.mere_lieu_cin} erreurPassport={leserreursHab.mere_passport} erreurDateExp={leserreursHab.mere_date_exp} erreurProf={leserreursHab.mere_prof_p}
-              erreurEmail={leserreursHab.mere_email_P} erreurMdp={leserreursHab.mere_mdp_P} erreurMdpVerif={leserreursHab.mere_mdp_verif_P}/> 
+              erreurEmail={leserreursHab.mere_email_P} erreurMdp={leserreursHab.mere_mdp_P} erreurMdpVerif={leserreursHab.mere_mdp_verif_P}
+              compteExistant={modeEdition && Boolean(mere.id)}/> 
           </div>
 
           <div className="enfants">
@@ -512,6 +582,10 @@ export default function CarnetDialog({ onCreated }) {
                   onChange={(e) => changerEnfant(i, "date_nais_Ef", e.target.value)} required />
                 <input placeholder="Lieu de naissance" value={en.lieu_nais_Ef}
                   onChange={(e) => changerEnfant(i, "lieu_nais_Ef", e.target.value)} required />
+                {en.photo_url && (
+                  <img src={en.photo_url} alt={`Photo actuelle de ${en.prenom_Ef} ${en.nom_Ef}`}
+                    style={{ width: 96, height: 96, objectFit: "cover", borderRadius: 6 }} />
+                )}
                 <label>Photo de l'enfant :</label>
                 <input type="file" accept="image/*"
                   onChange={(e) => changerEnfant(i, "photo", e.target.files?.[0] || null)} />
@@ -523,7 +597,7 @@ export default function CarnetDialog({ onCreated }) {
                   {nationalites.map((n) => <option key={n.id} value={n.id}>{n.nationalite ?? n.id}</option>)}
                 </select>
                 <label>Profession :</label>
-                <select value={en.profession} onChange={(e) =>changerEnfant(i,"profession",e.target.value)} required>
+                <select value={en.profession} onChange={(e) =>changerEnfant(i,"profession",e.target.value)} required={!modeEdition}>
                   <option value="">Profession</option>
                   {professions.map((p) => <option key={p.id} value={p.id}>{p.nom_Prof ?? p.id}</option>)}
                 </select>
@@ -536,7 +610,7 @@ export default function CarnetDialog({ onCreated }) {
 
             <p style={{color:"red" ,size:"1rem"}}>{erreursChef} </p>
           <div className="btn__carnetDialog btn__action">
-              <button className="btn__valider" type="submit">Valider</button>
+              <button className="btn__valider" type="submit">{modeEdition ? "Enregistrer les modifications" : "Valider"}</button>
               <button onClick={fermer} className="btn__annuler" type="button">Annuler</button>
           </div>
         </form>
@@ -583,7 +657,7 @@ export default function CarnetDialog({ onCreated }) {
 
 //----pere et mere----
 function ParentFields({ titre, professions = [], nationalites = [], valeur, onChange ,erreurAge , 
-  erreurTel ,erreurNom ,erreurLieuNais ,erreurNationalite ,
+  erreurTel ,erreurNom ,erreurLieuNais ,erreurNationalite , compteExistant = false,
   erreurCin, erreurDateCin, erreurLieuCin, erreurPassport, erreurDateExp,erreurProf,erreurMdp,erreurMdpVerif,erreurEmail}) {
 
   if (!valeur) return null; 
@@ -617,6 +691,10 @@ function ParentFields({ titre, professions = [], nationalites = [], valeur, onCh
       <input type="text" value={valeur.nom_mere_P || ""} onChange={(e) => set("nom_mere_P", e.target.value)} />
 
       <label htmlFor="">Photo</label>
+      {valeur.photo_url && (
+        <img src={valeur.photo_url} alt={`Photo actuelle de ${valeur.prenom_P} ${valeur.nom_P}`}
+          style={{ width: 96, height: 96, objectFit: "cover", borderRadius: 6 }} />
+      )}
       <input type="file" accept="image/*"
         onChange={(e) => set("photo", e.target.files?.[0] || null)} />
 
@@ -698,17 +776,17 @@ function ParentFields({ titre, professions = [], nationalites = [], valeur, onCh
           </div>
 
           <div className="parent__compte">
+            {compteExistant && <p>Compte existant : ses identifiants ne sont pas modifiables ici.</p>}
             <label htmlFor="">Email :</label>
-            <input type="text" value={valeur.email_P || ""} onChange={(e) => set("email_P", e.target.value)} />
+            <input type="text" value={valeur.email_P || ""} onChange={(e) => set("email_P", e.target.value)} disabled={compteExistant} />
             {erreurEmail && <p style={{ color: "red" }}>{erreurEmail}</p>}
             <label htmlFor="">Mot de passe</label>
-            <input type="password" value={valeur.mdp_P || ""} onChange={(e) => set("mdp_P", e.target.value)} />
+            <input type="password" value={valeur.mdp_P || ""} onChange={(e) => set("mdp_P", e.target.value)} disabled={compteExistant} />
             {erreurMdp && <p style={{ color: "red" }}>{erreurMdp}</p>}
             <label htmlFor="">Confirmation mot de passe</label>
-            <input type="password" value={valeur.mdp_verif_P || ""} onChange={(e) => set("mdp_verif_P", e.target.value)} />
+            <input type="password" value={valeur.mdp_verif_P || ""} onChange={(e) => set("mdp_verif_P", e.target.value)} disabled={compteExistant} />
             {erreurMdpVerif && <p style={{ color: "red" }}>{erreurMdpVerif}</p>}
           </div>
       </fieldset>
   );
 }
-

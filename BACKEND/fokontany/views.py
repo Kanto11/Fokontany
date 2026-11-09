@@ -22,7 +22,7 @@ from .auth_api import EstResponsable
 from .auth_api import EstHabitant
 from .auth_api import  EstAuteurPublication
 from .cotisations import  tarif_residence, controle_auto,mois_depuis ,situation_carnet,tarifs_cotisations, tarif_actuel , tarif_du_mois
-from .serializers import ( ResidenceBureauSerializer,ResidenceDemandeSerializer,ResidenceHabitantSerializer,PaiementEspeceSerializer,LogementCreateSerializer,CarnetDetailSerializer,CarnetListSerializer,SecteurSerializer,PhotoSerializer,PublicationSerializer,PublicationCreateSerializer,MessageSerializer,MessageCreateSerializer,ResponsableSerializer,CarnetCreateSerializer,NationaliteSerializer,LogementSerializer,QuartierSerializer,ProfessionSerializer,CarnetImpayeSerializer,PaiementEspeceSerializer)
+from .serializers import ( ResidenceBureauSerializer,ResidenceDemandeSerializer,ResidenceHabitantSerializer,PaiementEspeceSerializer,LogementCreateSerializer,CarnetDetailSerializer,CarnetListSerializer,SecteurSerializer,PhotoSerializer,PublicationSerializer,PublicationCreateSerializer,MessageSerializer,MessageCreateSerializer,ResponsableSerializer,CarnetCreateSerializer,CarnetUpdateSerializer,NationaliteSerializer,LogementSerializer,QuartierSerializer,ProfessionSerializer,CarnetImpayeSerializer,PaiementEspeceSerializer)
 from .certificat import *
 from .models import *
 
@@ -471,6 +471,7 @@ class SecteurListView(ListAPIView):
             quartier=self.request.user.responsable.quartier).order_by("nom_S")
 
 class CarnetDetailView(RetrieveAPIView):
+    permission_classes = [EstResponsable]
     serializer_class = CarnetDetailSerializer
 
     def get_queryset(self):
@@ -489,6 +490,24 @@ class CarnetDetailView(RetrieveAPIView):
                 "enfants__nationalite",
             )
         )
+
+    def patch(self, request, *args, **kwargs):
+        carnet = self.get_object()
+        serializer = CarnetUpdateSerializer(
+            carnet,
+            data=request.data,
+            context={"request": request},
+        )
+        serializer.is_valid(raise_exception=True)
+        carnet = serializer.save()
+        carnet.refresh_from_db()
+
+        response_data = CarnetDetailSerializer(
+            carnet,
+            context={"request": request},
+        ).data
+        response_data["enfants_ids"] = serializer.enfants_ids
+        return Response(response_data)
 
 
 class ResidenceHabitantView(APIView) :

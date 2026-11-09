@@ -7,6 +7,7 @@ import debut from "../../assets/Icons/debut.png";
 import fin from "../../assets/Icons/fin.png";
 import precedent from "../../assets/Icons/gauche_fleche.png";
 import suivant from "../../assets/Icons/droite_fleche.png";
+import fermerImg from "../../assets/Icons/cross.png";
 
 export default function HabitantsResponsable() {
   const [carnets, setCarnets] = useState([]);
@@ -26,7 +27,15 @@ export default function HabitantsResponsable() {
   const [notification, setNotification] = useState("");
 
   const [carnetSelectionne, setCarnetSelectionne]= useState(null)
+  const [carnetEdition, setCarnetEdition] = useState(null);
   const modalVoir = useRef(null);
+  const modalEditionRef = useRef(null);
+
+  useEffect(() => {
+    if (carnetEdition) {
+      modalEditionRef.current?.ouvrir();
+    }
+  }, [carnetEdition]);
 
 
   useEffect(() => {
@@ -75,6 +84,18 @@ async function ouvrirDétailsCarnet(carnet) {
             error
         );
     }
+}
+async function ouvrirModificationCarnet(carnet) {
+    try {
+        const response = await api.get(`/carnets/${carnet.id}/`);
+        setCarnetEdition(response.data);
+    } catch (error) {
+        console.error("Erreur lors du chargement du carnet à modifier :", error);
+        setErreur("Impossible de charger le carnet à modifier.");
+    }
+}
+function fermer(){
+  modalVoir.current.close()
 }
   return (
     <div className="habitant_resp">
@@ -134,7 +155,15 @@ async function ouvrirDétailsCarnet(carnet) {
         <div className="habitant__resp__body">
           <div className="habitant__resp__left">
             {erreur && <p className="alerte alerte--erreur">{erreur}</p>}
-            {notification && <p className="alerte alerte--erreur" role="alert">{notification}</p>}
+            {notification && (
+              <p
+                className={`alerte ${notification.includes("échoué") ? "alerte--erreur" : ""}`}
+                role={notification.includes("échoué") ? "alert" : "status"}
+                style={notification.startsWith("Carnet modifié avec succès") ? { color: "green" } : undefined}
+              >
+                {notification}
+              </p>
+            )}
             <table>
               <thead>
                 <tr>
@@ -166,7 +195,7 @@ async function ouvrirDétailsCarnet(carnet) {
                     </td>
                     <td>
                       <button className="btn btn-sm" onClick={() => ouvrirDétailsCarnet(c)}>Voir</button>
-                      <button className="btn btn-sm">Modifier</button>
+                      <button className="btn btn-sm" onClick={() => ouvrirModificationCarnet(c)}>Modifier</button>
                     </td>
                   </tr>
                 ))}
@@ -201,8 +230,10 @@ async function ouvrirDétailsCarnet(carnet) {
 
       <dialog ref={modalVoir}>        
                 <div className="details-carnet">
-
-                  <h3>Informations du carnet</h3>
+                  <div className="btn__fermer" onClick={fermer} type="button">
+                    <img src={fermerImg} alt="Fermer" />
+                  </div>
+                  <h3 className="title__dialog">Informations du carnet</h3>
 
                   <p><strong>Numéro :</strong> {carnetSelectionne?.id}</p>
                   <p><strong>Adresse :</strong> {carnetSelectionne?.adresse}</p>
@@ -212,37 +243,40 @@ async function ouvrirDétailsCarnet(carnet) {
 
                   <hr />
 
-                  <h3>Informations du père</h3>
+                  <h3 className="s-title__dialog">Informations du père</h3>
 
                   {carnetSelectionne?.pere ? (
-                    <div>
-                      {carnetSelectionne.pere.photo ? (
+                    <div className="details__h">
+                      <div className="details__hg">
+                        {carnetSelectionne.pere.photo ? (
                         <img
                           src={carnetSelectionne.pere.photo}
                           alt={`Photo de ${carnetSelectionne.pere.prenom_P} ${carnetSelectionne.pere.nom_P}`}
                           loading="lazy"
                           style={{ width: 112, height: 112, objectFit: "cover", borderRadius: 6 }}
                         />
-                      ) : <p>Photo non renseignée.</p>}
-                      <p><strong>Nom :</strong> {carnetSelectionne.pere.nom_P}</p>
-                      <p><strong>Prénom :</strong> {carnetSelectionne.pere.prenom_P}</p>
-                      <p>
-                        <strong>Nationalité :</strong>{" "}
-                        {carnetSelectionne?.pere?.nationalite?.nationalite || "Non renseignée"}
-                      </p>
-
-                      <h4>Pièce d'identité</h4>
-                      {carnetSelectionne.pere.piece ? (
-                        <>
+                        ) : <p>Photo non renseignée.</p>}
+                      </div>
+                      <div className="details__hd">
+                        <p><strong>Nom :</strong> {carnetSelectionne.pere.nom_P}</p>
+                        <p><strong>Prénom :</strong> {carnetSelectionne.pere.prenom_P}</p>
+                        <p>
+                          <strong>Nationalité :</strong>{" "}
+                          {carnetSelectionne?.pere?.nationalite?.nationalite || "Non renseignée"}
+                        </p>
+                        <h4>Pièce d'identité</h4>
+                        {carnetSelectionne.pere.piece ? (
+                          <>
                           <p><strong>Type :</strong> {carnetSelectionne.pere.piece.type_piece}</p>
                           <p><strong>Numéro :</strong> {carnetSelectionne.pere.piece.numero}</p>
                           <p><strong>Date de délivrance :</strong> {carnetSelectionne.pere.piece.date_delivrance}</p>
                           <p><strong>Lieu de délivrance :</strong> {carnetSelectionne.pere.piece.lieu_delivrance}</p>
                           <p><strong>Date d'expiration :</strong> {carnetSelectionne.pere.piece.date_expiration}</p>
-                        </>
-                      ) : (
-                        <p>Aucune pièce d'identité renseignée.</p>
-                      )}
+                          </>
+                        ) : (
+                          <p>Aucune pièce d'identité renseignée.</p>
+                        )}
+                      </div>
                     </div>
                   ) : (
                     <p>Aucun père renseigné.</p>
@@ -250,37 +284,41 @@ async function ouvrirDétailsCarnet(carnet) {
 
                   <hr />
 
-                  <h3>Informations de la mère</h3>
+                  <h3 className="s-title__dialog">Informations de la mère</h3>
 
                   {carnetSelectionne?.mere ? (
-                    <div>
-                      {carnetSelectionne.mere.photo ? (
-                        <img
-                          src={carnetSelectionne.mere.photo}
-                          alt={`Photo de ${carnetSelectionne.mere.prenom_P} ${carnetSelectionne.mere.nom_P}`}
-                          loading="lazy"
-                          style={{ width: 112, height: 112, objectFit: "cover", borderRadius: 6 }}
-                        />
-                      ) : <p>Photo non renseignée.</p>}
-                      <p><strong>Nom :</strong> {carnetSelectionne.mere.nom_P}</p>
-                      <p><strong>Prénom :</strong> {carnetSelectionne.mere.prenom_P}</p>
-                      <p>
+                    <div className="details__h">
+                      <div className="details__hg">
+                        {carnetSelectionne.mere.photo ? (
+                          <img
+                            src={carnetSelectionne.mere.photo}
+                            alt={`Photo de ${carnetSelectionne.mere.prenom_P} ${carnetSelectionne.mere.nom_P}`}
+                            loading="lazy"
+                            style={{ width: 112, height: 112, objectFit: "cover", borderRadius: 6 }}
+                          />
+                        ) : <p>Photo non renseignée.</p>}
+                      </div>
+                      <div className="details__hd">
+                        <p><strong>Nom :</strong> {carnetSelectionne.mere.nom_P}</p>
+                        <p><strong>Prénom :</strong> {carnetSelectionne.mere.prenom_P}</p>
+                       <p>
                           <strong>Nationalité :</strong>{" "}
                           {carnetSelectionne?.mere?.nationalite?.nationalite || "Non renseignée"}
                         </p>
 
-                      <h4>Pièce d'identité</h4>
-                      {carnetSelectionne.mere.piece ? (
-                        <>
-                          <p><strong>Type :</strong> {carnetSelectionne.mere.piece.type_piece}</p>
-                          <p><strong>Numéro :</strong> {carnetSelectionne.mere.piece.numero}</p>
-                          <p><strong>Date de délivrance :</strong> {carnetSelectionne.mere.piece.date_delivrance}</p>
-                          <p><strong>Lieu de délivrance :</strong> {carnetSelectionne.mere.piece.lieu_delivrance}</p>
-                          <p><strong>Date d'expiration :</strong> {carnetSelectionne.mere.piece.date_expiration}</p>
-                        </>
-                      ) : (
-                        <p>Aucune pièce d'identité renseignée.</p>
-                      )}
+                        <h4>Pièce d'identité</h4>
+                        {carnetSelectionne.mere.piece ? (
+                          <>
+                            <p><strong>Type :</strong> {carnetSelectionne.mere.piece.type_piece}</p>
+                            <p><strong>Numéro :</strong> {carnetSelectionne.mere.piece.numero}</p>
+                            <p><strong>Date de délivrance :</strong> {carnetSelectionne.mere.piece.date_delivrance}</p>
+                            <p><strong>Lieu de délivrance :</strong> {carnetSelectionne.mere.piece.lieu_delivrance}</p>
+                            <p><strong>Date d'expiration :</strong> {carnetSelectionne.mere.piece.date_expiration}</p>
+                          </>
+                        ) : (
+                          <p>Aucune pièce d'identité renseignée.</p>
+                        )}
+                      </div>
                     </div>
                   ) : (
                     <p>Aucune mère renseignée.</p>
@@ -288,11 +326,12 @@ async function ouvrirDétailsCarnet(carnet) {
 
                   <hr />
 
-                  <h3>
+                  <h3 className="s-title__dialog">
                     Enfants ({carnetSelectionne?.enfants?.length || 0})
                   </h3>
 
                   {carnetSelectionne?.enfants?.length > 0 ? (
+                    
                     carnetSelectionne.enfants.map((enfant, index) => (
                       <div className="enfant-card" key={enfant.id || index}>
                         <h4>Enfant {index + 1}</h4>
@@ -331,6 +370,23 @@ async function ouvrirDétailsCarnet(carnet) {
                   <button>Fermer</button>
                </form>
       </dialog>
+
+      {carnetEdition && (
+        <CarnetDialog
+          key={carnetEdition.id}
+          ref={modalEditionRef}
+          carnet={carnetEdition}
+          onCancel={() => setCarnetEdition(null)}
+          onUpdated={(_, erreursPhotos = []) => {
+            setCarnetEdition(null);
+            setErreur("");
+            setVersionCarnets((version) => version + 1);
+            setNotification(erreursPhotos.length
+      ? `Carnet modifié, mais l'envoi d'une ou plusieurs photos a échoué : ${erreursPhotos.join(" ")}`
+      : "Carnet modifié avec succès.");
+          }}
+        />
+      )}
 
     </div>
   );
