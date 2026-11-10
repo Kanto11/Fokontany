@@ -410,7 +410,6 @@ class ResponsableSerializer(serializers.ModelSerializer):
 
 
 class MessageCreateSerializer(serializers.ModelSerializer):
-    """Ce que l'habitant envoie. L'expéditeur vient du compte connecté."""
     class Meta:
         model = Message
         fields = ["destinataire", "objet", "contenu"]

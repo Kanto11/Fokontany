@@ -132,6 +132,6 @@ def fabriquer_pdf(residence):
 def lire_image(champ):
     champ.open("rb")
     try:
-        return ImageReader(io.ByteIO(champ.read()))
+        return ImageReader(io.BytesIO(champ.read()))
     finally:
         champ.close()
