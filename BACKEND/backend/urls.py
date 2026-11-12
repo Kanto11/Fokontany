@@ -35,6 +35,7 @@ urlpatterns = [
     path("api/residences/<int:pk>/pdf/", ResidencePdfView.as_view()),
     path("api/residences/personnes/" ,FamilleHabitantView.as_view()),
     path("api/residences/", ResidenceHabitantView.as_view()),
+    path("api/verifier/residence/<str:code>/",VerifierResidenceView.as_view()),
 
     path("api/responsables/", ResponsablesQuartierView.as_view()),
     path("api/messages/", MessageHabitantView.as_view()),

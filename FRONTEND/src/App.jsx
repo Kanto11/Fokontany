@@ -16,6 +16,8 @@ import LayoutHabitant from "./components/habitant/LayoutHabitant";
 import CotisationHab from "./pages/HABITANT/CotisationsHab";
 import ResidenceHab from "./pages/HABITANT/MesResidences";
 import AccueilHb from "./pages/HABITANT/PublicationsHabitant"
+import Verification from "./pages/Verifications";
+
 function ABientot({ nom }) {
   return <p>Page « {nom} » : à construire.</p>;
 }
@@ -24,6 +26,8 @@ function App() {
     <Routes>
         <Route path="/" element={<Accueil />} />
         <Route path="/authentification" element={<Authentification />} />
+        <Route path="/verifier" element={<Verification />} />
+        <Route path="/verif/residence/:code" element={<Verification />} />
         
         <Route element={<RouteProtegee type="HABITANT"/>}>
           <Route path="/habitant" element={<LayoutHabitant/>}>

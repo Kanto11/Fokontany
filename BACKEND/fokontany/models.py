@@ -325,6 +325,11 @@ class Residence(models.Model):
                 and self.valable_jusqu_au is not None
                 and self.valable_jusqu_au >= date.today())
 
+    @property
+    def numero(self):
+        cle = str(self.token).replace("-","")[:4].upper()
+        return f"RES-{self.id:05d}-{cle}"
+
     def __str__(self):
         return f"Résidence n°{self.pk} ({self.status})"
 

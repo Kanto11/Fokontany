@@ -73,7 +73,7 @@ def fabriquer_pdf(residence):
     c.setFont("Helvetica-Bold", 14)
     c.drawCentredString(L / 2, H - 6 * cm, f"FOKONTANY {quartier.nom_Q.upper()}")
     c.setFont("Helvetica", 10)
-    c.drawCentredString(L / 2, H - 7 * cm, f"N° : {residence.id:05d}")
+    c.drawCentredString(L / 2, H - 7 * cm, f"N° : {residence.numero}")
 
     # photo 
     try:

@@ -12,6 +12,7 @@ from rest_framework.views import APIView;
 from rest_framework.generics import ListAPIView;
 from rest_framework.generics import ListCreateAPIView;
 from rest_framework.generics import RetrieveAPIView;
+from rest_framework.permissions import AllowAny
 
 from django.db.models import Q ,Sum
 from django.shortcuts import get_object_or_404
@@ -756,6 +757,50 @@ class ResidenceTraiterView(APIView):
             return Response({"detail": "Action inconnue."}, status=400)
 
         return Response({"id": r.id, "status": r.status, "revoquee": r.revoquee})
+
+def trouver_residence(code):
+    code = code.strip()
+    if code.upper().startswith("RES-"):
+        try:
+            _,num,cle=code.upper().split("-")
+            r=Residence.objects.get(pk=int(num))
+        except (ValueError,Residence.DoesNotExist):
+            return None
+        return r if r.numero.endswith(cle) else None
+    
+    try:
+        return Residence.objects.get(token=code)
+    except(Residence.DoesNotExist,ValueError,ValidationError):
+        return None
+
+class VerifierResidenceView(APIView):
+    permission_classes = [AllowAny]
+    authentification_classes = []
+
+    def get(self,request,code):
+        r = trouver_residence(code)
+        if r is None or r.status != "VALIDE":
+            return Response({"detail":"Aucun certificat "},status=404)
+
+        if r.revoquee:
+            etat = "REVOQUEE"
+        elif not r.est_valable:
+            etat = "EXPIREE"
+        else:
+            etat = "VALIDE"
+
+        p = r.parent_concerne or r.enfant_concerne
+        photo = getattr(p,"photo_P",None) or getattr(p,"photo_Ef",None)
+        return Response({
+            "etat" : etat,
+            "numero" : r.numero,
+            "nom" : getattr(p,"nom_P",None) or getattr(p,"nom_Ef",None),
+            "prenom" : getattr(p,"prenom_P",None) or getattr(p,"prenom_Ef",None),
+            "photo": request.build_absolute_uri(photo.url) if photo else None,
+            "date_validation" : r.date_validation,
+            "valable_jusqu_au" : r.valable_jusqu_au,
+            "motif_revocation" : getattr(r,"motif_refus","") if etat == "REVOQUEE" else "",
+        })
 
 class CarnetPersonnesView(APIView):
     permission_classes = [EstResponsable]

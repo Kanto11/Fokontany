@@ -53,6 +53,9 @@ export default function Accueil(){
                     
                         </div>
                         <div className="header__signup">
+                            <Link to="/verifier" className="sign_up">Verification</Link>
+                        </div>
+                        <div className="header__signup">
                             <Link to="/authentification" className="sign_up">Se connecter</Link>
                         </div>
                     </div>
