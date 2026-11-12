@@ -312,7 +312,7 @@ class Residence(models.Model):
         self.valable_jusqu_au = date.today() + timedelta(days=90)   # environ 3 mois
         
         self.token = uuid.uuid4()
-        img = qrcode.make(f"{settings.SITE_URL}verif/residence/{self.token}")
+        img = qrcode.make(f"{settings.SITE_URL}/verif/residence/{self.token}")
         buf = io.BytesIO()
         img.save(buf, format="PNG")
         self.qr_code.save(f"residence_{self.pk}.png", ContentFile(buf.getvalue()), save=False)

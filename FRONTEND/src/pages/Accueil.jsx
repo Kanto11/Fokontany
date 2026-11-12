@@ -52,9 +52,7 @@ export default function Accueil(){
                             </ul>
                     
                         </div>
-                        <div className="header__signup">
-                            <Link to="/verifier" className="sign_up">Verification</Link>
-                        </div>
+                        
                         <div className="header__signup">
                             <Link to="/authentification" className="sign_up">Se connecter</Link>
                         </div>
@@ -86,6 +84,9 @@ export default function Accueil(){
                 <h2 className="section__title">Verification du residence</h2>
                 <input type="text" placeholder="Numero de residence à verifier" />
                 <a>Cliquer ici pour scanner..</a>
+                <div className="header__signup">
+                            <Link to="/verifier" className="sign_up">VERIFIER UN RESIDENCE</Link>
+                </div>
             </div>
         </div>
 

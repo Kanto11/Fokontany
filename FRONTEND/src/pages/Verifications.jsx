@@ -51,7 +51,16 @@ export default function Verification(){
                         <div className="verification__info">
                             <div className={`alert ${ETATS[d.etat].classe}`}>{ETATS[d.etat].texte}</div>
                             {d.photo && (
-                            <img src={d.photo} alt="" className="w-28 h-28 rounded-full object-cover" />
+                            <img src={d.photo} alt="" />
+                            )}
+                            <h2>{d.nom}-{d.prenom}</h2>
+                            <p>N° {d.numero}</p>
+                            <p >
+                                Délivré le {jour(d.date_validation)}<br />
+                                Valable jusqu'au {jour(d.valable_jusqu_au)}
+                            </p>
+                            {d.etat === "REVOQUEE" && d.motif_revocation && (
+                            <p className="text-sm text-error">Motif : {d.motif_revocation}</p>
                             )}
                         </div>
                         
