@@ -1,0 +1,39 @@
+@use '../abstract' as * ;
+.Verification{
+    background-color:$bg-gris-section ;
+    min-height: 100vh;
+    
+}
+.verification__contatiner{
+    padding: 1rem;
+    
+}
+
+.verif__logos{
+    align-items: center;
+    display: flex;
+    
+}
+.verif__titre{
+    color: $color-bleu;
+    font-family: $font-hero-title;
+    text-align: center;
+    padding:   1rem 0;
+}
+.verif__nb{
+    p{
+        text-align:justify;
+        padding-bottom: 1rem;
+    }
+}
+.verif__action{
+    display: flex;
+    justify-content: end;
+    padding: 0.5rem 0;
+}
+.btn__verifier{
+    background-color: $color-jaune;
+    color:$color-bleu;  
+    
+    
+}

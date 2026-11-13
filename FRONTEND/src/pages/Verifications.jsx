@@ -1,7 +1,7 @@
 import { useEffect , useState } from "react";
 import {useNavigate , useParams} from "react-router-dom";
 import api from "../api";
-
+import logos from "../assets/Images/logos.png"
 const ETATS = {
     VALIDE: {texte : "Certificat valide" , classe:"alert-success"},
     EXPIREE : {texte:"Certificat expieré",classe:"alert-warning"},
@@ -37,11 +37,32 @@ export default function Verification(){
         <div className="Verification">
             <div className="wrapper">
                 <div className="verification__contatiner">
-                    <h3>Verification de certificat de residence</h3>
-
-                    <form action="" onSubmit={chercher}>
-                        <input type="text" value={saisie} onChange={(e) =>setSaisie(e.target.value)} />
-                        <button>Verifier</button>
+                    <div className="verif__header">
+                        <div className="verif__logos">
+                            <div className="logos">
+                                <div className="img__logos">
+                                    <img src={logos} alt="" />
+                                </div>
+                                <div className="text__logos">
+                                    <span className="fkt">Fkt</span>
+                                    <span className="logos__lieu">Andohamandry</span>
+                                </div>
+                            </div>
+                        </div>
+                        <h4 className="verif__titre">Page de vérification de certificat de résidence</h4>
+                    </div>
+                    <div className="verif__nb">
+                        <p> Ce site est la plateforme officielle de vérification de certificat de résidence de Fokontany d'Andohamandry.</p>
+                        <p> Tous les résultats présentés ici sont exacts. Si vous constatez une fausse déclaration de résidence, merci de contacter directement le responsable du Fokontany, cette infraction étant passible de poursuites.</p>
+                    </div>
+                   
+                    <form action="" onSubmit={chercher} className="verif__search">
+                        <label htmlFor="">Numero de résidence :</label>
+                        <input type="text" value={saisie} onChange={(e) =>setSaisie(e.target.value)} placeholder="RES-00001-A342" />
+                        <div className="verif__action">
+                            <button className="btn__verifier">Verifier</button>
+                        </div>
+                        
                     </form>
 
                     {chargement && <p >Vérification…</p>}

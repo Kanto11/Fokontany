@@ -6,6 +6,8 @@ import logos from "../assets/Images/logos.png";
 import comptable from "../assets/Images/comptable.jpg";
 import histoire from "../assets/Images/histoire.png";
 import fleche from "../assets/Icons/fleche.png";
+
+import verification from"./Verifications";
 export default function Accueil(){
     const [openMenu,setOpenMenu] = useState(false)
     const [activeLink , setActivateLink] = useState("#apropos")
@@ -78,19 +80,7 @@ export default function Accueil(){
             </div>
         </div>
     </div>
-    <section className="Verification__residence">
-        <div className="wrapper">
-            <div className="ver__res__container">
-                <h2 className="section__title">Verification du residence</h2>
-                <input type="text" placeholder="Numero de residence à verifier" />
-                <a>Cliquer ici pour scanner..</a>
-                <div className="header__signup">
-                            <Link to="/verifier" className="sign_up">VERIFIER UN RESIDENCE</Link>
-                </div>
-            </div>
-        </div>
-
-    </section>
+    
     <section className="apropos" id="apropos">
         <div className="wrapper">
             <div className="apropos__container">
@@ -138,6 +128,16 @@ export default function Accueil(){
                     </p>
                     <p>--</p>
                     <p>La force d'Andohamandry réside dans la dynamique de sa communication locale et ses activités communautaires régulées, qui associent technologies de proximité et comités de vigilance pour assurer une gestion transparente. Cette gouvernance participative et cet art de vivre exclusif font désormais de ce fokontany une référence inspirante et particulièrement attractive pour les résidents des autres secteurs de la ville.</p>
+                </div>
+            </div>
+        </div>
+    </section>
+    <section className="Verification__residence">
+        <div className="wrapper">
+            <div className="ver__res__container">
+                <h2 className="section__title">Verification du residence</h2>
+                <div>
+                    <Link to="/verifier" > Cliquer ici pour verifier un résidence</Link>
                 </div>
             </div>
         </div>
