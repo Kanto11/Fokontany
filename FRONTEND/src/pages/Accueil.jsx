@@ -1,4 +1,4 @@
-import {useState} from "react"
+import {useEffect, useState} from "react"
 import { Link } from "react-router-dom";
 import burger from "../assets/Icons/burger-icon.svg"
 import bureau from "../assets/Images/Bureau.png";
@@ -7,10 +7,11 @@ import comptable from "../assets/Images/comptable.jpg";
 import histoire from "../assets/Images/histoire.png";
 import fleche from "../assets/Icons/fleche.png";
 
-import verification from"./Verifications";
+import api from "../api";
 export default function Accueil(){
     const [openMenu,setOpenMenu] = useState(false)
     const [activeLink , setActivateLink] = useState("#apropos")
+    const [resultats,setResultats ] = useState({})
 
     const toggleMenu = () => {
         setOpenMenu(!openMenu);
@@ -20,6 +21,11 @@ export default function Accueil(){
         setActivateLink(link);
         setOpenMenu(false);
     }
+    useEffect(()=>{
+        api.get("/accueil/").then(({data})=>{console.log("Donnees recus:",data);
+            setResultats(data)})
+
+    },[])
     return(
         <main>
              <header className="header">
@@ -49,7 +55,7 @@ export default function Accueil(){
                                 <a href="#responsable" onClick={() => handleLinkClick("#responsable")}>Responsable</a>
                                 </li>
                                 <li className={activeLink === "#contact" ? "active" : ""}>
-                                <a href="#contact" onClick={() => handleLinkClick("#contact")}>Contact</a>
+                                <a href="#residence" onClick={() => handleLinkClick("#Residence")}>Residence</a>
                                 </li>
                             </ul>
                     
@@ -95,18 +101,18 @@ export default function Accueil(){
                             <p className="stat__info">Largeur</p>
                         </div>
                         <div className="stat__card card">
-                            <p className="stat__valeur">5</p>
+                            <p className="stat__valeur">{resultats?.secteur ?? 0}</p>
                             <p className="stat__info">Nombre de secteur</p>
                         </div>
                     </div>
                    <div className="gril__stat">
                         <div className="stat__card card">
-                            <p className="stat__valeur">150.000</p>
+                            <p className="stat__valeur">{resultats?.total_habitant ?? 0}</p>
                             <p className="stat__info">Nombre des habitants</p>
                         </div>
                         <div className="stat__card card">
-                            <p className="stat__valeur">150+</p>
-                            <p className="stat__info">Nombre de secteur</p>
+                            <p className="stat__valeur">{resultats?.logement ?? 0}</p>
+                            <p className="stat__info">Nombre des logement</p>
                         </div>
                    </div>
                      
@@ -132,16 +138,7 @@ export default function Accueil(){
             </div>
         </div>
     </section>
-    <section className="Verification__residence">
-        <div className="wrapper">
-            <div className="ver__res__container">
-                <h2 className="section__title">Verification du residence</h2>
-                <div>
-                    <Link to="/verifier" > Cliquer ici pour verifier un résidence</Link>
-                </div>
-            </div>
-        </div>
-    </section>
+   
     <section className="responsable" id="responsable">
         <div className="wrapper">
             <div className="responsable__container">
@@ -181,6 +178,48 @@ export default function Accueil(){
             </div>
         </div>
     </section>
-        </main>
+    <section className="Verification__residence" id="residence">
+        <div className="wrapper">
+            <div className="ver__res__container">
+                <h2 className="section__title">Verification du residence</h2> 
+                <div className="ver__res__body">
+                    <p> Vérifiez ici l'appartenance d'une résidence au quartier d'Andohamandry</p>
+                    <Link to="/verifier" className="ouvrir__verif"> Verifier un résidence</Link>
+                </div>
+            </div>
+        </div>
+    </section>
+    <footer className="footer">
+        <div className="wrapper">
+            <div className="footer__container">
+                <div className="footer__left">
+                    <div className="contact">
+                        <p>032 01 777 31</p>
+                        <p>fktandohamandry@gmail.com</p>
+                        <p>Antananarivo 101</p>
+                        <p>Site Officiel Fkt Andohamandry</p>
+                    </div>
+                </div>
+                <div className={`footer__link ${openMenu ? 'open' : ''}`}>
+                            <ul>
+                                <li className={activeLink === "#apropos" ? "active" : ""}>
+                                <a href="#apropos" onClick={() => handleLinkClick("#apropos")}>Apropos</a>
+                                </li>
+                                <li className={activeLink === "#histoire" ? "active" : ""}>
+                                <a href="#histoire" onClick={() => handleLinkClick("#histoire")}>Historique</a>
+                                </li>
+                                <li className={activeLink === "#responsable" ? "active" : ""}>
+                                <a href="#responsable" onClick={() => handleLinkClick("#responsable")}>Responsable</a>
+                                </li>
+                                <li className={activeLink === "#contact" ? "active" : ""}>
+                                <a href="#residence" onClick={() => handleLinkClick("#Residence")}>Residence</a>
+                                </li>
+                            </ul>
+                    
+                </div>
+            </div>
+        </div>
+    </footer>
+</main>
     );
 }

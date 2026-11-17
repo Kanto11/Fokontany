@@ -17,7 +17,7 @@ export default function AccueilResponsable(){
     useEffect(() => {
       api.get("/dashboard/responsable/")
       .then(({data}) => {setResultats(data)
-      console.log("Données reçues de l'API :", data)})
+      })
       .catch(() => setErreur("Impossible de charger le dashboard"))
     },[])
 

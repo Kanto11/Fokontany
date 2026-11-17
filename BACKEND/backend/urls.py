@@ -12,6 +12,7 @@ urlpatterns = [
     path("api/auth/login/", LoginView.as_view()),
     path("api/auth/refresh/", TokenRefreshView.as_view()),  
     path("api/moi/", MoiView.as_view()),
+    path("api/accueil/",AccueilView.as_view()),
 
     path("api/carnets/" ,CarnetCreateView.as_view()),
     path("api/carnets/<int:pk>/",CarnetDetailView.as_view()),

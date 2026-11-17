@@ -52,7 +52,7 @@ export default function Verification(){
                         <h4 className="verif__titre">Page de vérification de certificat de résidence</h4>
                     </div>
                     <div className="verif__nb">
-                        <p> Ce site est la plateforme officielle de vérification de certificat de résidence de Fokontany d'Andohamandry.</p>
+                        <p> Ce site est la plateforme officielle pour la  vérification de certificat de résidence de Fokontany d'Andohamandry.</p>
                         <p> Tous les résultats présentés ici sont exacts. Si vous constatez une fausse déclaration de résidence, merci de contacter directement le responsable du Fokontany, cette infraction étant passible de poursuites.</p>
                     </div>
                    

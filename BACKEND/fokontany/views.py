@@ -943,3 +943,17 @@ class DashboardResponsableView(APIView):
             "graphique" : graphique,
             "familles_en_retard" : en_retard,
         })
+
+class AccueilView(APIView):
+    authentication_classes = []
+    permission_classes = [AllowAny]
+    def get(self,request):
+        parents = Parent.objects.count()
+        enfants = Enfant.objects.count()
+
+        total_habitant = parents + enfants
+
+        secteur = Secteur.objects.filter(quartier__nom_Q="Andohamandry").count()
+        logement= Logement.objects.filter(secteur__quartier__nom_Q="Andohamandry").count()
+    
+        return Response({'total_habitant':total_habitant , 'secteur':secteur,'logement':logement})
